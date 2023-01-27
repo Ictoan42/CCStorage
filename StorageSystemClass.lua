@@ -1,9 +1,9 @@
 -- object wrapper for the storage system as a whole
 
-ConfigFile = require("/StorageSystem/ConfigFileClass")
-ChestArray = require("/StorageSystem/ChestArrayClass")
-ItemHandler = require("/StorageSystem/ItemHandlerClass")
-SortingList = require("/StorageSystem/SortingListClass")
+ConfigFile = require("/CCStorage/ConfigFileClass")
+ChestArray = require("/CCStorage/ChestArrayClass")
+ItemHandler = require("/CCStorage/ItemHandlerClass")
+SortingList = require("/CCStorage/SortingListClass")
 CCLogger = require("/CCLogger") -- this file is in root
 pr = require("cc.pretty")
 prp = pr.pretty_print
