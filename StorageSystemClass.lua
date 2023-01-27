@@ -175,6 +175,14 @@ function new(confFilePath)
     ---------------
     -- INIT SORTINGLIST
     ---------------
+
+    -- if sorting list storage file does not exist, create a blank on
+    if not fs.exists(cfg.sortingListFilePath) then
+        local f = fs.open(cfg.sortingListFilePath, "w")
+        f.write("\n")
+        f.close()
+    end
+
     local sortingList
     do
         sortingList = SortingList.new(
