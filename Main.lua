@@ -1,6 +1,6 @@
 print("Running Storage System")
 
-confFilePath = "/CCStorage/storageSystem.conf"
+confFilePath = "/CCStorage/CCStorage.conf"
 
 print("Config file: " .. confFilePath)
 
