@@ -3,6 +3,8 @@
 -- parse args
 local args = {...}
 
+local ArgOverwrite = false
+
 for k, v in pairs(args) do
 
     if v == "-o" then ArgOverwrite = true end
