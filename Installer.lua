@@ -26,7 +26,7 @@ shell.run("wget " .. mainURL .. "StorageSystemClass.lua" .. " /CCStorage/Storage
 
 shell.run("wget " .. mainURL .. "StorageSystemModemListener.lua" .. " /CCStorage/StorageSystemModemListener.lua")
 
-shell.run("wget " .. mainURL .. "ConfigTemplate.lua" .. " /CCStorage/CCStorage.conf")
+shell.run("wget " .. mainURL .. "ConfigTemplate.conf" .. " /CCStorage/CCStorage.conf")
 
 -- download CCLogger (dependency)
 shell.run("wget " .. "https://raw.githubusercontent.com/Ictoan42/CCLogger/main/CCLogger.lua" .. " /CCLogger.lua")
