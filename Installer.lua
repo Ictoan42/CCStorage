@@ -1,7 +1,16 @@
 -- installer for the CCStorage main storage system program
 
+-- parse args
+local args = {...}
+
+for k, v in pairs(args) do
+
+    if v == "-o" then ArgOverwrite = true end
+
+end
+
 -- safety check
-if fs.exists("/CCStorage") then
+if not ArgOverwrite and fs.exists("/CCStorage") then
     print("CCStorage seems to already be installed, please wipe any existing files before reinstalling")
     return
 end
