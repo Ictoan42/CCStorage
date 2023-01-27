@@ -9,8 +9,7 @@ end
 -- create folder
 fs.makeDir("/CCStorage")
 
--- download files into folder
-
+-- download main files into folder
 local mainURL = "https://raw.githubusercontent.com/Ictoan42/CCStorage/main/"
 
 shell.run("wget " .. mainURL .. "ChestArrayClass.lua" .. " /CCStorage/ChestArrayClass.lua")
@@ -26,3 +25,8 @@ shell.run("wget " .. mainURL .. "SortingListClass.lua" .. " /CCStorage/SortingLi
 shell.run("wget " .. mainURL .. "StorageSystemClass.lua" .. " /CCStorage/StorageSystemClass.lua")
 
 shell.run("wget " .. mainURL .. "StorageSystemModemListener.lua" .. " /CCStorage/StorageSystemModemListener.lua")
+
+shell.run("wget " .. mainURL .. "ConfigTemplate.lua" .. " /CCStorage/CCStorage.conf")
+
+-- download CCLogger (dependency)
+shell.run("wget " .. "https://raw.githubusercontent.com/Ictoan42/CCLogger/main/CCLogger.lua" .. " /CCLogger.lua")
