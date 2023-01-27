@@ -22,12 +22,15 @@ function new(filePath)
             -- find the " = " that seperates key from value
             splitStart, splitEnd = line:find(" = ")
 
-            -- extract the key and value strings
-            keyName = line:sub(1, splitStart-1)
-            valName = line:sub(splitEnd+1, -1):gsub("'", "")
+            if splitStart ~= nil then -- if this is a valid key-val pair
 
-            -- register that option
-            opts[keyName] = valName
+                -- extract the key and value strings
+                keyName = line:sub(1, splitStart-1)
+                valName = line:sub(splitEnd+1, -1):gsub("'", "")
+
+                -- register that option
+                opts[keyName] = valName
+            end
 
         end
     
