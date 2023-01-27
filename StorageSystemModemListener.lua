@@ -46,7 +46,7 @@ function main(confFilePath)
         error("Wired modem must be used")
     else
         -- the actual program
-        local storsys = StorageSystem.new("/storageSystem.conf")
+        local storsys = StorageSystem.new(confFilePath)
 
         modem.open(20) -- main port for inbound comms
 
