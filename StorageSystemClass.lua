@@ -169,6 +169,7 @@ function new(confFilePath)
             print("No storage blocks have been excluded, is that intentional?")
             print("(Have you set up the config?)")
             term.setTextColour(c)
+        end
 
         for k, v in pairs(networkNames) do
             if isInListSegment(cfg.storageBlockIDs, v) then
