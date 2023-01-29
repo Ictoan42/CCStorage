@@ -114,6 +114,9 @@ function new(confFilePath)
 
         if cfg.logFilePath ~= "" then -- if a log file has been specified
             logFile = fs.open(cfg.logFilePath, "w")
+            print("Log file is " .. cfg.logFilePath)
+        else
+            print("No log file was specified")
         end
 
         if cfg.logMonName ~= "" then -- if a log term has been specified
@@ -121,6 +124,9 @@ function new(confFilePath)
             peripheral.call(cfg.logMonName, "clear")
             peripheral.call(cfg.logMonName, "setCursorPos", 1, 1)
             logTerm = peripheral.wrap(cfg.logMonName)
+            print("Log monitor is " .. cfg.logMonName)
+        else
+            print("No log monitor was specified")
         end
 
         -- i'm sorry
@@ -156,6 +162,13 @@ function new(confFilePath)
         local networkNames = modem.getNamesRemote()
 
         local chests = {} -- array of chests to store in
+
+        if cfg.storageBlocksExclude == "" then
+            local c = term.getTextColour()
+            term.setTextColour(colours.red)
+            print("No storage blocks have been excluded, is that intentional?")
+            print("(Have you set up the config?)")
+            term.setTextColour(c)
 
         for k, v in pairs(networkNames) do
             if isInListSegment(cfg.storageBlockIDs, v) then
