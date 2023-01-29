@@ -165,7 +165,7 @@ function new(confFilePath)
 
         if cfg.storageBlocksExclude == "" then
             local c = term.getTextColour()
-            term.setTextColour(colours.red)
+            term.setTextColour(colours.yellow)
             print("No storage blocks have been excluded, is that intentional?")
             print("(Have you set up the config?)")
             term.setTextColour(c)
