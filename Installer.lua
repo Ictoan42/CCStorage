@@ -55,6 +55,7 @@ if response == "Y" or response == "" then
     else
         local f = fs.open("/startup.lua", "w")
         f.write("term.clear()")
+        f.write("term.setCursorPos(1, 1)")
         f.write("shell.run(\"CCStorage/Main.lua\")")
         f.close()
     end
