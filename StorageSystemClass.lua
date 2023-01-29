@@ -227,6 +227,11 @@ function new(confFilePath)
 
     logger:i("--- INIT COMPLETE ---")
 
+    local c1 = term.getTextColour()
+    term.setTextColour(colours.green)
+    print("Initialisation complete")
+    term.setTextColour(c1)
+
     return setmetatable(
         {
             logger = logger,
