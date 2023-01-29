@@ -44,23 +44,30 @@ shell.run("wget " .. mainURL .. "ConfigTemplate.conf" .. " /CCStorage/CCStorage.
 shell.run("wget " .. "https://raw.githubusercontent.com/Ictoan42/CCLogger/main/CCLogger.lua" .. " /CCLogger.lua")
 
 -- setup startup script
-print("Would you like CCStorage to run on startup? [Y/n]")
-local response = read()
+term.clear()
+term.setCursorPos(1, 1)
 
-if response == "Y" or response == "" then
-    print("Creating startup script...")
+while true do
+    print("Would you like CCStorage to run on startup? [Y/n]")
+    local response = read()
 
-    if fs.exists("/startup.lua") then
-        print("Failed to create startup script: startup.lua already exists")
+    if response == "Y" or response == "" then
+        print("Creating startup script...")
+
+        if fs.exists("/startup.lua") then
+            print("Failed to create startup script: startup.lua already exists")
+        else
+            local f = fs.open("/startup.lua", "w")
+            f.write("term.clear()")
+            f.write("term.setCursorPos(1, 1)")
+            f.write("shell.run(\"CCStorage/Main.lua\")")
+            f.close()
+        end
+    else if response == "n"
+        print("No startup script will be created")
     else
-        local f = fs.open("/startup.lua", "w")
-        f.write("term.clear()")
-        f.write("term.setCursorPos(1, 1)")
-        f.write("shell.run(\"CCStorage/Main.lua\")")
-        f.close()
+        print("Unrecognised response, please re enter")
     end
-else
-    print("No startup script will be created")
 end
 
 print("")
