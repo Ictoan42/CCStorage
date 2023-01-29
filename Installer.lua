@@ -53,8 +53,7 @@ if response == "Y" or response == "" then
     if fs.exists("/startup.lua") then
         print("Failed to create startup script: startup.lua already exists")
     else
-        fs.create("/startup.lua")
-        local f = fs.open("/startup.lua")
+        local f = fs.open("/startup.lua", "w")
         f.write("shell.run(\"StorageSystem/Main.lua\"")
         f.close()
     end
