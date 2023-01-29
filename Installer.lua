@@ -63,7 +63,7 @@ while true do
             f.write("shell.run(\"CCStorage/Main.lua\")")
             f.close()
         end
-    else if response == "n"
+    else if response == "n" then
         print("No startup script will be created")
     else
         print("Unrecognised response, please re enter")
