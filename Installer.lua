@@ -54,6 +54,7 @@ if response == "Y" or response == "" then
         print("Failed to create startup script: startup.lua already exists")
     else
         local f = fs.open("/startup.lua", "w")
+        f.write("term.clear()")
         f.write("shell.run(\"CCStorage/Main.lua\")")
         f.close()
     end

@@ -116,7 +116,10 @@ function new(confFilePath)
             logFile = fs.open(cfg.logFilePath, "w")
             print("Log file is " .. cfg.logFilePath)
         else
+            local c = term.getTextColour()
+            term.setTextColour(colours.yellow)
             print("No log file was specified")
+            term.setTextColour(c)
         end
 
         if cfg.logMonName ~= "" then -- if a log term has been specified
@@ -126,7 +129,10 @@ function new(confFilePath)
             logTerm = peripheral.wrap(cfg.logMonName)
             print("Log monitor is " .. cfg.logMonName)
         else
+            local c = term.getTextColour()
+            term.setTextColour(colours.yellow)
             print("No log monitor was specified")
+            term.setTextColour(c)
         end
 
         -- i'm sorry
