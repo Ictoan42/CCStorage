@@ -13,7 +13,8 @@ end
 
 -- safety check
 if not ArgOverwrite and fs.exists("/CCStorage") then
-    print("CCStorage seems to already be installed, please wipe any existing files before reinstalling")
+    print("CCStorage seems to already be installed.")
+    print("Please wipe any existing files before reinstalling, or run with the '-o' flag to redownload missing files")
     return
 end
 
@@ -41,3 +42,25 @@ shell.run("wget " .. mainURL .. "ConfigTemplate.conf" .. " /CCStorage/CCStorage.
 
 -- download CCLogger (dependency)
 shell.run("wget " .. "https://raw.githubusercontent.com/Ictoan42/CCLogger/main/CCLogger.lua" .. " /CCLogger.lua")
+
+-- setup startup script
+print("Would you like CCStorage to run on startup? [Y/n]")
+local response = read()
+
+if response == "Y" or response == "" then
+    print("Creating startup script...")
+
+    if fs.exists("/startup.lua") then
+        print("Failed to create startup script: startup.lua already exists")
+    else
+        fs.create("/startup.lua")
+        local f = fs.open("/startup.lua")
+        f.write("shell.run(\"StorageSystem/Main.lua\"")
+        f.close()
+    end
+else
+    print("No startup script will be created")
+end
+
+print("")
+print("Installation complete")
