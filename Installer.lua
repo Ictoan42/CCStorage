@@ -64,8 +64,12 @@ while true do
             f.close()
         end
 
+        break
+
     elseif response == "n" then
         print("No startup script will be created")
+
+        break
     else
         print("Unrecognised response, please re enter")
     end
