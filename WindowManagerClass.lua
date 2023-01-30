@@ -28,7 +28,7 @@ function WindowManager:newWindow(name, x, y, w, h, bgcol, fgcol, bordercol)
         return false
     else
         self.windows[name] = AdvancedWindow.new(self.term, x, y, w, h, bgcol, fgcol, bordercol)
-        return true
+        return self.windows[name]
     end
 end
 
