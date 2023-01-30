@@ -33,7 +33,7 @@ end
 function Button:flash(window)
     -- briefly flashes to the "activated" colour, then back
     self:draw(true, window)
-    sleep(0.05)
+    sleep(0.1)
     self:draw(false, window)
 end
 
