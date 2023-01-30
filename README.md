@@ -3,7 +3,7 @@ This is the basic client API for interacting with a CCStorage system.
 
 <br/>
 
-## Basic usage:
+## Basic Usage:
 
     -- import the API
     RemoteStorageSystem = require("RemoteStorageSystemClass")
@@ -26,7 +26,7 @@ This is the basic client API for interacting with a CCStorage system.
 
 `RemoteStorageSystem:list(liteMode)`
 
-Returns a list of items in the storage system. Format returned is an array, where every entry is itself an array, representing a single chest in the system. The per-chest array is identical to that returns by the built in function `inventory.list()`, but with added entries `chestName` and `chestSize` for every entry. These extra entries do make the function slower however, so the boolean `liteMode` is accepted, which will disable those entries if set to `true`. Defaults to `false` though.
+Returns a list of items in the storage system. Format returned is an array, where every entry is itself an array, representing a single chest in the system. The per-chest array is identical to that returned by the built-in function `inventory.list()`, but with added entries `chestName` and `chestSize` for every entry. These extra entries do make the function slower however, so the boolean `liteMode` is accepted, which will disable those entries if set to `true`. Defaults to `false` though.
 
 <br/>
 
@@ -80,4 +80,4 @@ Instructs the storage system to search for any items it doesn't recognise and mo
 
 `RemoteStorageSystem:getConfig()`
 
-Returns the configuration settings of the storage system, in the form of a `ConfigFile` object.
+Returns the configuration settings of the storage system, in the form of a `ConfigFile` object. (The class for which is in the `main` branch)
