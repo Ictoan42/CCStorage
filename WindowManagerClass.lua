@@ -32,6 +32,12 @@ function WindowManager:newWindow(name, x, y, w, h, bgcol, fgcol, bordercol)
     end
 end
 
+function WindowManager:removeWindow(name)
+
+    self.windows[name] = nil
+
+end
+
 function WindowManager:handleMonitorTouch(evName, side, x, y)
     
     -- find which window this touch was on
