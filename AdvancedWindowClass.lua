@@ -51,8 +51,8 @@ function AdvancedWindow:activateButtonByID(id)
     if self.buttons[id] == nil then -- this button doesn't exist
         return false
     else
-        local ret = self.buttons[id].callback()
         self.buttons[id]:flash(self.innerWin)
+        local ret = self.buttons[id].callback()
         return ret
     end
 end
@@ -157,6 +157,24 @@ end
 function AdvancedWindow:setBorderColour(col)
 
     self.borderColour = col
+
+end
+
+function AdvancedWindow:getBackgroundColour(col)
+
+    return self.backgroundColour
+    
+end
+
+function AdvancedWindow:getTextColour(col)
+
+    return self.foregroundColour
+
+end
+
+function AdvancedWindow:getBorderColour(col)
+
+    return self.borderColour
 
 end
 
