@@ -142,6 +142,24 @@ function AdvancedWindow:drawBorder()
 
 end
 
+function AdvancedWindow:setBackgroundColour(col)
+
+    self.backgroundColour = col
+    
+end
+
+function AdvancedWindow:setTextColour(col)
+
+    self.foregroundColour = col
+
+end
+
+function AdvancedWindow:setBorderColour(col)
+
+    self.borderColour = col
+
+end
+
 local AdvancedWindowMetatable = {
     __index = AdvancedWindow
 }
