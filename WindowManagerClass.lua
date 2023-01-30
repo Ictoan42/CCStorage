@@ -60,7 +60,7 @@ end
 function WindowManager:monTouchListener()
 
     while not self.shuttingDown do
-        self:handleMonitorTouch(os.pullEvent("mouse_click"))
+        self:handleMonitorTouch(os.pullEvent("monitor_touch"))
     end
 
 end
