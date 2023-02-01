@@ -45,27 +45,52 @@ function RemoteStorageSystem:getConfig()
 end
 
 function RemoteStorageSystem:sendReq(arr)
+    -- sends the request in either blocking or non blocking mode depending
+    -- on what the RSS was set to do on object creation
+
+    if self.blocking then
+        self:sendBlockingReq(arr)
+    else
+        self:sendNonBlockingReq(arr)
+    end
+
+end
+
+function RemoteStorageSystem:sendBlockingReq(arr)
     -- this should only be used internally
     if type(arr) ~= "table" then -- bug in this very class
-        error("RemoteStorageSystemClass shat itself, non-table passed to sendReq")
+        error("RemoteStorageSystemClass shat itself, non-table passed to sendBlockingReq")
     end
     self.modem.transmit(self.outPort, self.inPort, arr)
     local resEv = table.pack(os.pullEvent("modem_message"))
     return resEv[5]
 end
 
+function RemoteStorageSystem:sendNonBlockingReq(arr)
+    -- should also only be used internally
+    -- instead of waiting for a response, this simply doesn't
+    -- self:handleNonBlockingResponse should be used to interpret
+    if type(arr) ~= "table" then -- bug in this very class
+        error("RemoteStorageSystemClass shat itself, non-table passed to sendBlockingReq")
+    end
+    self.modem.transmit(self.outPort, self.inPort, arr)
+    return
+end
+
 local RemoteStorageSystemMetatable = {
     __index = RemoteStorageSystem
 }
 
-function new(modem, port, returnPort)
+function new(modem, port, returnPort, isBlocking)
     -- args:
     --  - modem: modem object to send data through
     --  - port: integer - port for outbound comms, defaults to 20
     --  - returnPort: integer - port for inbound comms, defaults to 21
+    --  - isBlocking: boolean - whether the RSS will wait for a response within a method call, or leave the user to handle the response, defaults to true
 
     port = port or 20
     returnPort = returnPort or 21
+    isBlocking = isBlocking or true
 
     -- get config
     modem.open(returnPort)
@@ -77,7 +102,8 @@ function new(modem, port, returnPort)
             cfg = cfgResponse,
             outPort = port,
             inPort = returnPort,
-            modem = modem
+            modem = modem,
+            blocking = isBlocking
         },
         RemoteStorageSystemMetatable
     )
