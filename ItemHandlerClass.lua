@@ -34,6 +34,33 @@ function itemSorter:sortItem(slot, from, itemObj)
     end
 end
 
+function splitAndExecSafely(execTable, execLimit)
+    -- like parallel.waitForAny(), but splits the table in 224-piece (by default) chunks to avoid filling the event queue
+    execLimit = execLimit or 224
+    local n = #execTable
+    
+    if n < execLimit then -- no need to do any of this shit
+        parallel.waitForAll(table.unpack(execTable))
+    else
+        -- actually gotta do the thing
+        
+        -- how many times will we need to run through?
+        local loopCount = math.ceil(n / execLimit)
+
+        -- loop that many times
+        for i=1, loopCount do
+            -- take items out of the table and exec them
+            parallel.waitForAll(
+                table.unpack(
+                    execTable,
+                    ((i-1) * execLimit)+1,
+                    math.min(i * execLimit, n)
+                )
+            )
+        end
+    end
+end
+
 function itemSorter:sortAllFromChest(from)
     -- uses the stored sortingList to sort all items in the given chest into the stored chestArray
 
@@ -43,13 +70,25 @@ function itemSorter:sortAllFromChest(from)
 
     local unregisteredFound = false
 
+    local funcsToExec = {}
+
+    local results = {}
+
+    -- iterate over every slot in the chest, sorting the items in parallel
     for k, v in pairs(list) do
-        local result = self:sortItem(k, from, v)
-        if result == false then -- "if this item didn't have a dest"
-            self.logger:d("ItemHandler:sortAllFromChest found unregistered item: " .. v["name"])
-            unregisteredFound = true
-        end
+        table.insert(
+            funcsToExec,
+            function()
+                local result = self:sortItem(k, from, v)
+                if result == false then
+                    self.logger:d("ItemHandler:sortAllFromChest found unregistered item: " .. v["name"])
+                    unregisteredFound = true
+                end
+            end
+        )
     end
+
+    splitAndExecSafely(funcsToExec)
 
     return not unregisteredFound -- invert to align with system-wide concept of "false" meaning bad and "true" meaning good
 end

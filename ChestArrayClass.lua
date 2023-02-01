@@ -2,6 +2,33 @@
 
 local chestArray = {}
 
+function splitAndExecSafely(execTable, execLimit)
+    -- like parallel.waitForAny(), but splits the table in 224-piece (by default) chunks to avoid filling the event queue
+    execLimit = execLimit or 224
+    local n = #execTable
+    
+    if n < execLimit then -- no need to do any of this shit
+        parallel.waitForAll(table.unpack(execTable))
+    else
+        -- actually gotta do the thing
+        
+        -- how many times will we need to run through?
+        local loopCount = math.ceil(n / execLimit)
+
+        -- loop that many times
+        for i=1, loopCount do
+            -- take items out of the table and exec them
+            parallel.waitForAll(
+                table.unpack(
+                    execTable,
+                    ((i-1) * execLimit)+1,
+                    math.min(i * execLimit, n)
+                )
+            )
+        end
+    end
+end
+
 function chestArray:list(liteMode)
     -- takes the list() func of every chest in the array and concatenates them together
     -- adds special "chestName" and "chestSize" entries in the per-chest array to allow for finding items
@@ -12,14 +39,39 @@ function chestArray:list(liteMode)
     liteMode = liteMode or false
 
     local arrOut = {}
-    for i=1, #self.chests do
-        local contents = peripheral.call(self.chests[i], "list")
+
+    local funcsToExec = {}
+    for k, v in pairs(self.chests) do
         if not liteMode then
-            contents["chestName"] = self.chests[i] -- "chestName" is the block id of the chest e.g. "minecraft:chest_0"
-            contents["chestSize"] = peripheral.call(self.chests[i], "size") -- integer
+            
+            table.insert(
+                funcsToExec,
+                
+                function()
+                    local contents = peripheral.call(v, "list")
+                    contents["chestName"] = v
+                    contents["chestSize"] = self.chestSizes[v]
+                    table.insert(arrOut, contents)
+                end
+
+            )
+
+        else
+            
+            table.insert(
+                funcsToExec,
+
+                function()
+                    local contents = peripheral.call(v, "list")
+                    table.insert(arrOut, contents)
+                end
+                
+            )
+
         end
-        table.insert(arrOut, contents) -- .insert() without a "pos" arg appends to the table
     end
+
+    splitAndExecSafely(funcsToExec)
 
     return arrOut
 end
@@ -57,8 +109,25 @@ local CAmetatable = {
 
 function new(chestArr, logger)
     -- chestArr is a 1-indexed array of chest identifiers, e.g. minecraft:chest_0
+
+    -- get sizes of chests
+    local funcsToExec = {}
+    local chestSizesTable = {}
+
+    for k, v in pairs(chestArr) do
+        table.insert(
+            funcsToExec,
+            function()
+                chestSizesTable[v] = peripheral.call(v, "size")
+            end
+        )
+    end
+
+    splitAndExecSafely(funcsToExec)
+
     return setmetatable({
         chests = chestArr,
+        chestSizes = chestSizesTable,
         logger = logger
     }, CAmetatable)
 end
