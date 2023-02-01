@@ -66,14 +66,18 @@ function main(confFilePath)
                 methodDoesNotExistReturn(storsys, returnPort, methodName)
             else
                 storsys.logger:d("Modem Shim calling method " .. methodName)
-                returnVal = storsys[methodName](
-                    storsys, -- calling with : usually sends the "self" var as the first argument, we must emulate that here
-                    table.unpack(
-                        data,
-                        2, -- ignore first entry, which is the method name
-                        data.n -- need this to make sure we get all vals, including nils
-                    )
-                )
+                returnVal = {
+                    storsys[methodName](
+                        storsys, -- calling with : usually sends the "self" var as the first argument, we must emulate that here
+                        table.unpack(
+                            data,
+                            2, -- ignore first entry, which is the method name
+                            data.n -- need this to make sure we get all vals, including nils
+                        )
+                    ),
+                    methodName
+                }
+
                 returnResult(storsys, returnPort, returnVal)
             end
         end
