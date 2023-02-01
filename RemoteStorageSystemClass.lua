@@ -81,16 +81,16 @@ local RemoteStorageSystemMetatable = {
     __index = RemoteStorageSystem
 }
 
-function new(modem, port, returnPort, isBlocking)
+function new(modem, port, returnPort, isNonBlocking)
     -- args:
     --  - modem: modem object to send data through
     --  - port: integer - port for outbound comms, defaults to 20
     --  - returnPort: integer - port for inbound comms, defaults to 21
-    --  - isBlocking: boolean - whether the RSS will wait for a response within a method call, or leave the user to handle the response, defaults to true
+    --  - isNonBlocking: boolean - whether the RSS will leave it to the user to handle responses, defaults to false
 
     port = port or 20
     returnPort = returnPort or 21
-    isBlocking = isBlocking or true
+    isNonBlocking = isNonBlocking or false
 
     -- get config
     modem.open(returnPort)
@@ -103,7 +103,7 @@ function new(modem, port, returnPort, isBlocking)
             outPort = port,
             inPort = returnPort,
             modem = modem,
-            blocking = isBlocking
+            blocking = not isNonBlocking
         },
         RemoteStorageSystemMetatable
     )
