@@ -49,7 +49,7 @@ function RemoteStorageSystem:sendReq(arr)
     -- on what the RSS was set to do on object creation
 
     if self.blocking then
-        self:sendBlockingReq(arr)
+        return self:sendBlockingReq(arr)
     else
         self:sendNonBlockingReq(arr)
     end
