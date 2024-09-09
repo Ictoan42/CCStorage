@@ -12,7 +12,7 @@ fs.makeDir("/CCStorage/Server")
 -- download main files
 local mainURL = "https://raw.githubusercontent.com/Ictoan42/CCStorage/main/"
 
-local files = [
+local files = {
     "ChestArrayClass.lua",
     "ConfigTemplate.conf",
     "ItemHandlerClass.lua",
@@ -20,7 +20,7 @@ local files = [
     "SortingListClass.lua",
     "StorageSystemClass.lua",
     "StorageSystemModemListener.lua"
-]
+}
 
 for k, v in pairs(files) do
     shell.run("wget " .. mainURL .. "Server/" .. v)
