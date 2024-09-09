@@ -25,7 +25,7 @@ This program will respond to requests on the given response port, or 21 if no re
 
 ]]--
 
-StorageSystem = require("/CCStorage/StorageSystemClass")
+StorageSystem = require("/CCStorage/Server/StorageSystemClass")
 
 modem = peripheral.find("modem")
 

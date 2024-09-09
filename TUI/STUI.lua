@@ -1,5 +1,5 @@
-RSS = require("RemoteStorageSystemClass")
-SB = require("SearchBoxClass")
+RSS = require("/CCStorage/Common/RemoteStorageSystemClass")
+SB = require("/CCStorage/TUI/SearchBoxClass")
 CCS = require("cc.strings")
 PR = require("cc.pretty")
 

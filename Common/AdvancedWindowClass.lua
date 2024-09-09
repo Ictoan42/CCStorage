@@ -1,4 +1,4 @@
-Button = require("ButtonClass")
+Button = require("/CCStorage/Common/ButtonClass")
 
 local AdvancedWindow = {}
 

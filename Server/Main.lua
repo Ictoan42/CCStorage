@@ -1,10 +1,10 @@
 print("Running Storage System")
 
-confFilePath = "/CCStorage/CCStorage.conf"
+confFilePath = "/CCStorage/Server/CCStorage.conf"
 
 print("Config file: " .. confFilePath)
 
-SSML = require("/CCStorage/StorageSystemModemListener")
+SSML = require("/CCStorage/Server/StorageSystemModemListener")
 
 SSML.main(confFilePath)
 

@@ -1,5 +1,5 @@
-AdvancedWindow = require("AdvancedWindowClass")
-Button = require("ButtonClass")
+AdvancedWindow = require("/CCStorage/Common/AdvancedWindowClass")
+Button = require("/CCStorage/Common/ButtonClass")
 
 local WindowManager = {}
 

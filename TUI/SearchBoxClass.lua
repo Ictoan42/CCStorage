@@ -2,7 +2,7 @@
 -- as strings, a search value to look for, and a function to run when
 -- an entry is clicked on
 
-local AW = require("AdvancedWindowClass")
+local AW = require("/CCStorage/Common/AdvancedWindowClass")
 
 local SearchBox = {}
 
