@@ -1,8 +1,3 @@
-print("Stub")
-
--- download CCLogger (dependency)
-shell.run("wget " .. "https://raw.githubusercontent.com/Ictoan42/CCLogger/main/CCLogger.lua" .. " /CCLogger.lua")
-
 if not fs.exists("/CCStorage") then
     error("Directory /CCStorage does not exist")
 end
@@ -25,3 +20,5 @@ local files = {
 for k, v in pairs(files) do
     shell.run("wget " .. mainURL .. "Server/" .. v)
 end
+
+shell.run("wget run " .. mainURL .. "Common/Installer.lua")
