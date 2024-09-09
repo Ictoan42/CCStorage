@@ -18,7 +18,7 @@ local files = {
 }
 
 for k, v in pairs(files) do
-    shell.run("wget " .. mainURL .. "Server/" .. v)
+    shell.run("wget " .. mainURL .. "Server/" .. v .. " /CCStorage/Server/" .. v)
 end
 
 shell.run("wget run " .. mainURL .. "Common/Installer.lua")

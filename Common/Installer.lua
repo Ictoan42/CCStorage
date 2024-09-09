@@ -20,5 +20,5 @@ local files = {
 }
 
 for k, v in pairs(files) do
-    shell.run("wget " .. mainURL .. "Common/" .. v)
+    shell.run("wget " .. mainURL.."Common/"..v .. " /CCStorage/Common/"..v)
 end
