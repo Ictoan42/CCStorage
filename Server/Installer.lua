@@ -21,4 +21,6 @@ for k, v in pairs(files) do
     shell.run("wget " .. mainURL .. "Server/" .. v .. " /CCStorage/Server/" .. v)
 end
 
-shell.run("wget run " .. mainURL .. "Common/Installer.lua")
+if not fs.exists("/CCStorage/Common") or not fs.exists("/CCLogger.lua") then
+    shell.run("wget run " .. mainURL .. "Common/Installer.lua")
+end
