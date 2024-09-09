@@ -66,6 +66,11 @@ function itemSorter:sortAllFromChest(from)
 
     self.logger:d("ItemHandler executing method sortAllFromChest")
 
+    if not peripheral.isPresent(from) then
+        self.logger:e("ItemHandler was passed the non-existent peripheral name \""..from.."\" to sort from")
+        return nil
+    end
+
     local list = peripheral.call(from, "list")
 
     local unregisteredFound = false
