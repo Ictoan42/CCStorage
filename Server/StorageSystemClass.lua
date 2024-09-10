@@ -8,7 +8,7 @@ SortingList = require("CCStorage.Server.SortingListClass")
 CCLogger = require("CCLogger") -- this file is in root
 local pr = require("cc.pretty")
 local prp = pr.pretty_print
-Ok, Err = Result.Ok, Result.Err
+Ok, Err, Try = Result.Ok, Result.Err, Result.Try
 
 local StorageSystem = {}
 
@@ -159,7 +159,6 @@ local function new(confFilePath)
         logger:i("Term log level: " .. logger.termLogLevel)
         logger:i("Colour enabled: " .. tostring(logger.enableColour))
     end
-    
 
     ---------------
     -- INIT CHESTARRAY
@@ -191,7 +190,7 @@ local function new(confFilePath)
             chests,
             logger
         )
-        
+
     end
 
     ---------------
