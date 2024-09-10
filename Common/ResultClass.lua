@@ -1,6 +1,6 @@
 -- an attempt to copy rust's Result type in a way that makes sense for lua
 
-Result = {}
+local Result = {}
 
 function Result:unwrap()
     if self.status == "ok" then
@@ -54,17 +54,17 @@ function Result:brokenStateError()
     error("Attempted to interact with a Result with broken state: \"" .. self.status .. "\"\n\n" .. debug.traceback(), 2)
 end
 
-function result_tostring(result)
+local function result_tostring(result)
     if result:is_ok() then
-        return "Ok("..result:unwrap()..")"
+        return "Ok(\""..result:unwrap().."\")"
     elseif result:is_err() then
-        return "Err("..result:unwrap_err()..")"
+        return "Err(\""..result:unwrap_err().."\")"
     else
         self:brokenStateError()
     end
 end
 
-function result_index(result, key)
+local function result_index(result, key)
     if Result[key] ~= nil then
         return Result[key]
     else
@@ -72,12 +72,12 @@ function result_index(result, key)
     end
 end
 
-ResultMetatable = {
+local ResultMetatable = {
     __index = result_index,
     __tostring = result_tostring
 }
 
-function Ok(val)
+local function Ok(val)
     if type(val) == "nil" then
         error("Attempted to construct an Ok() Result with value of type nil\n\n"..debug.traceback(), 2)
     end
@@ -88,7 +88,7 @@ function Ok(val)
     return setmetatable(obj, ResultMetatable)
 end
 
-function Err(val)
+local function Err(val)
     if type(val) ~= "string" then
         error("Attempted to construct a Err() Result with an error message that isn't a string\n\n"..debug.traceback(), 2)
     end
