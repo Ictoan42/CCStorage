@@ -1,9 +1,28 @@
-print("Running Storage System..")
+print("Initialising Storage System..")
 
-confFilePath = "/CCStorage/Server.conf"
+args = {...}
+
+local confFilePath
+for k, v in pairs(args) do
+    if v == "-c" then
+        -- get next arg
+        nextArg = args[k+1]
+        if type(nextArg) == "string" then
+            confFilePath = nextArg
+            print("Got config path '"..confFilePath.."' from arguments")
+        else
+            error("Server Main was passed the -c flag, but no path")
+        end
+    end
+end
+
+if confFilePath == nil then
+    confFilePath = "/CCStorage/Server.conf"
+    print("Defaulting to config path '"..confFilePath.."'")
+end
 
 if fs.exists(confFilePath) then
-    print("Found config file: " .. confFilePath)
+    print("Found config file")
     SSML = require("/CCStorage/Server/StorageSystemModemListener")
     SSML.main(confFilePath)
 else
