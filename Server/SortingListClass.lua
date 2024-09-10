@@ -160,7 +160,7 @@ local sortingListMetatable = {
     __index = sortingList,
 }
 
-function new(storageFile, backupFile, muntedFilePath, logger)
+local function new(storageFile, backupFile, muntedFilePath, logger)
 
     if storageFile == nil then
         -- storage file must be specified

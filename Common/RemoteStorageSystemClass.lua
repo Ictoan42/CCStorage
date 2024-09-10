@@ -81,7 +81,7 @@ local RemoteStorageSystemMetatable = {
     __index = RemoteStorageSystem
 }
 
-function new(modem, port, returnPort, isNonBlocking)
+local function new(modem, port, returnPort, isNonBlocking)
     -- args:
     --  - modem: modem object to send data through
     --  - port: integer - port for outbound comms, defaults to 20
@@ -95,8 +95,8 @@ function new(modem, port, returnPort, isNonBlocking)
     -- get config
     modem.open(returnPort)
     modem.transmit(port, returnPort, {"getConfig"})
-    responseEv = table.pack(os.pullEvent("modem_message"))
-    cfgResponse = responseEv[5]
+    local responseEv = table.pack(os.pullEvent("modem_message"))
+    local cfgResponse = responseEv[5]
 
     return setmetatable({
             cfg = cfgResponse,

@@ -5,9 +5,10 @@
 --     find items in the given chestArray
 --     find any items that aren't registered in the given sortingList
 
-itemSorter = {}
 local EU = require("CCStorage.Common.ExecUtils")
 local SplitAndExecSafely = EU.SplitAndExecSafely
+
+local itemSorter = {}
 
 function itemSorter:sortItem(slot, from, itemObj)
     -- uses the stored sortingList to sort the item in the given slot of the given input chest into the stored chestArray
@@ -277,11 +278,11 @@ function itemSorter:retrieveItems(itemName, to, count, toSlot)
     end
 end
 
-itemSorterMetatable = {
+local itemSorterMetatable = {
     __index = itemSorter,
 }
 
-function new(arrayTo, sortingList, logger)
+local function new(arrayTo, sortingList, logger)
     return setmetatable(
         {
             chestArray = arrayTo,

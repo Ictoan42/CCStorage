@@ -11,7 +11,7 @@ function Button:draw(isActivated, window)
         colToDraw = self.idleColour
     end
 
-    oldX, oldY = t.getCursorPos()
+    local oldX, oldY = t.getCursorPos()
 
     t.setBackgroundColour(colToDraw)
     for y = self.y, self.y + self.h do
@@ -41,7 +41,7 @@ local ButtonMetatable = {
     __index = Button
 }
 
-function new(id, label, x, y, w, h, idleColour, activatedColour, callback)
+local function new(id, label, x, y, w, h, idleColour, activatedColour, callback)
     return setmetatable(
         {
             id = id,

@@ -19,8 +19,8 @@ function StatusWindow:flash(bgcol, tcol)
     -- flash the entire window to the given colours
     -- render through any stored message while we're at it
 
-    oldbgcol = self.win:getBackgroundColour()
-    oldtcol = self.win:getTextColour()
+    local oldbgcol = self.win:getBackgroundColour()
+    local oldtcol = self.win:getTextColour()
 
     self.win:setBackgroundColour(bgcol)
     self.win:setTextColour(tcol)

@@ -1,12 +1,12 @@
 print("Initialising Storage System..")
 
-args = {...}
+local args = {...}
 
 local confFilePath
 for k, v in pairs(args) do
     if v == "-c" then
         -- get next arg
-        nextArg = args[k+1]
+        local nextArg = args[k+1]
         if type(nextArg) == "string" then
             confFilePath = nextArg
             print("Got config path '"..confFilePath.."' from arguments")

@@ -4,31 +4,31 @@ ICW = require("/CCStorage/Monitor_GUI/ItemCountWatcherClass")
 MBP = require("/CCStorage/Monitor_GUI/MainButtonPanelClass")
 SW = require("/CCStorage/Monitor_GUI/StatusWindowClass")
 
-modem = peripheral.find("modem")
-mon = peripheral.wrap("left")
+local modem = peripheral.find("modem")
+local mon = peripheral.wrap("left")
 
 mon.setTextScale(0.5)
-mX, mY = mon.getSize()
+local mX, mY = mon.getSize()
 mon.clear()
 
-rss = RSS.new(modem, 20, 21, true)
+local rss = RSS.new(modem, 20, 21, true)
 
-wm = WM.new(mon)
+local wm = WM.new(mon)
 
 local inputChest = "minecraft:chest_6"
 
-statusWindow = SW.new(wm, rss, "statusWindow", 2, 2, mX - 25, 10, colours.lightGrey, colours.black, colours.grey)
+local statusWindow = SW.new(wm, rss, "statusWindow", 2, 2, mX - 25, 10, colours.lightGrey, colours.black, colours.grey)
 statusWindow:setMessage({"Status: Idle"})
 statusWindow:render()
 
-mainButtonPanel = MBP.new(wm, rss, "mainButtonPanel", mX - 21, 2, 20, mY-2, colours.lightGrey, colours.black, colours.grey, statusWindow, inputChest)
+local mainButtonPanel = MBP.new(wm, rss, "mainButtonPanel", mX - 21, 2, 20, mY-2, colours.lightGrey, colours.black, colours.grey, statusWindow, inputChest)
 mainButtonPanel:draw2()
 
-itemCounter = ICW.new(wm, rss, "itemCountWatcher", 2, 13, mX - 25, mY-13, colours.lightGrey, colours.black, colours.grey, statusWindow)
+local itemCounter = ICW.new(wm, rss, "itemCountWatcher", 2, 13, mX - 25, mY-13, colours.lightGrey, colours.black, colours.grey, statusWindow)
 
-timerID = 0
+local timerID = 0
 
-function timerHandler(evIn)
+local function timerHandler(evIn)
 
     if not shouldSkipList then
         itemCounter:requestList()
@@ -38,7 +38,7 @@ function timerHandler(evIn)
 
 end
 
-function modemMessageHandler(evIn)
+local function modemMessageHandler(evIn)
 
     if evIn[5][2] == "sortFromInput" then
 

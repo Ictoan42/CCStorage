@@ -1,16 +1,18 @@
 -- object wrapper for the storage system as a whole
 
-ConfigFile = require("/CCStorage/Common/ConfigFileClass")
-ChestArray = require("/CCStorage/Server/ChestArrayClass")
-ItemHandler = require("/CCStorage/Server/ItemHandlerClass")
-SortingList = require("/CCStorage/Server/SortingListClass")
-CCLogger = require("/CCLogger") -- this file is in root
-pr = require("cc.pretty")
-prp = pr.pretty_print
+ConfigFile = require("CCStorage.Common.ConfigFileClass")
+Result = require("CCStorage.Common.ResultClass")
+ChestArray = require("CCStorage.Server.ChestArrayClass")
+ItemHandler = require("CCStorage.Server.ItemHandlerClass")
+SortingList = require("CCStorage.Server.SortingListClass")
+CCLogger = require("CCLogger") -- this file is in root
+local pr = require("cc.pretty")
+local prp = pr.pretty_print
+Ok, Err = Result.Ok, Result.Err
 
 local StorageSystem = {}
 
-function isInList(listStr, s)
+local function isInList(listStr, s)
     -- internal func for decoding lists from the config file
     -- checks whether the given string "s" is contained within the list
 
@@ -23,7 +25,7 @@ function isInList(listStr, s)
     return false -- only get here if all checks fail
 end
 
-function isInListSegment(listStr, s)
+local function isInListSegment(listStr, s)
     -- internal func, used for decoding lists in config file
     -- checks whether any entries in the list are substrings of "s"
 
@@ -59,7 +61,7 @@ end
 function StorageSystem:detectAndRegisterItems()
     self.logger:d("StorageSystem executing method detectAndRegisterItems")
 
-    unregisteredItems = self.itemHandler:findUnregisteredItems()
+    local unregisteredItems = self.itemHandler:findUnregisteredItems()
 
     if unregisteredItems == false then -- no unregistered items found
         return false
@@ -97,10 +99,10 @@ local StorageSystemMetatable = {
     __index = StorageSystem
 }
 
-function new(confFilePath)
+local function new(confFilePath)
 
     -- create config file obj
-    cfg = ConfigFile.new(confFilePath)
+    local cfg = ConfigFile.new(confFilePath)
 
     ---------------
     -- INIT LOGGER

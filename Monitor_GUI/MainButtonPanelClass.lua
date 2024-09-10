@@ -15,7 +15,7 @@ end
 
 function MainButtonPanel:init()
 
-    midPoint = self.win.height / 4
+    local midPoint = self.win.height / 4
 
     self.win:addButton("sort", "Sort", 2, 2, self.win.width - 4, 10, colours.red, colours.lime, function() self:sort() end)
     self.win:addButton("register", "Register", 2, 14, self.win.width - 4, 10, colours.red, colours.lime, function() self:register() end)

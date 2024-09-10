@@ -1,8 +1,8 @@
 -- a window that lists the most common items in the storage system
 
-pr = require("cc.pretty")
-prp = pr.pretty_print
-ccs = require("cc.strings")
+local pr = require("cc.pretty")
+local prp = pr.pretty_print
+local ccs = require("cc.strings")
 
 local ItemCountWatcher = {}
 

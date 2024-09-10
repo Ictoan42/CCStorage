@@ -1,9 +1,9 @@
 -- object wrapper for the array of storage chests
 
-local chestArray = {}
 local EU = require("CCStorage.Common.ExecUtils")
 local SplitAndExecSafely = EU.SplitAndExecSafely
 
+local chestArray = {}
 
 function chestArray:list(liteMode)
     -- takes the list() func of every chest in the array and concatenates them together
@@ -83,7 +83,7 @@ local CAmetatable = {
     __index = chestArray
 }
 
-function new(chestArr, logger)
+local function new(chestArr, logger)
     -- chestArr is a 1-indexed array of chest identifiers, e.g. minecraft:chest_0
 
     -- get sizes of chests

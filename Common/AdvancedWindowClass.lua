@@ -1,4 +1,4 @@
-Button = require("/CCStorage/Common/ButtonClass")
+Button = require("CCStorage.Common.ButtonClass")
 
 local AdvancedWindow = {}
 
@@ -182,9 +182,9 @@ local AdvancedWindowMetatable = {
     __index = AdvancedWindow
 }
 
-function new(parent, x, y, w, h, bgcol, fgcol, bordercol)
+local function new(parent, x, y, w, h, bgcol, fgcol, bordercol)
 
-    outerWin = window.create(
+    local outerWin = window.create(
         parent,
         x,
         y,
@@ -192,7 +192,7 @@ function new(parent, x, y, w, h, bgcol, fgcol, bordercol)
         h
     )
 
-    innerWin = window.create(
+    local innerWin = window.create(
         outerWin,
         2, -- relative to outerWin coord space
         2,
@@ -200,7 +200,7 @@ function new(parent, x, y, w, h, bgcol, fgcol, bordercol)
         h-2
     )
 
-    win = setmetatable(
+    local win = setmetatable(
         {
             x = x,
             y = y,
