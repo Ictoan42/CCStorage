@@ -29,6 +29,17 @@ function Result:unwrap_err(logger) -- logger is option
     end
 end
 
+function Result:handle(okFunc, errFunc)
+    if type(okFunc) ~= "function" or type(errFunc) ~= "function" then
+        error("Attempted to call Result:handle() with a non-function argument\n\n"..debug.traceback(), 2)
+    end
+    if self:is_ok() then
+        return okFunc(self:unwrap())
+    else
+        return errFunc(self:unwrap_err())
+    end
+end
+
 function Result:ok_or(func)
     if self:is_ok() then
         return self:unwrap()
