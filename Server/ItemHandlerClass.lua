@@ -6,6 +6,8 @@
 --     find any items that aren't registered in the given sortingList
 
 itemSorter = {}
+local EU = require("CCStorage.Common.ExecUtils")
+local SplitAndExecSafely = EU.SplitAndExecSafely
 
 function itemSorter:sortItem(slot, from, itemObj)
     -- uses the stored sortingList to sort the item in the given slot of the given input chest into the stored chestArray
@@ -34,18 +36,6 @@ function itemSorter:sortItem(slot, from, itemObj)
     end
 end
 
-function splitAndExecSafely(execTable, execLimit)
-    -- like parallel.waitForAny(), but splits the table in 224-piece (by default) chunks to avoid filling the event queue
-    execLimit = execLimit or 224
-    local n = #execTable
-    
-    if n < execLimit then -- no need to do any of this shit
-        parallel.waitForAll(table.unpack(execTable))
-    else
-        -- actually gotta do the thing
-        
-        -- how many times will we need to run through?
-        local loopCount = math.ceil(n / execLimit)
 
         -- loop that many times
         for i=1, loopCount do
@@ -93,7 +83,7 @@ function itemSorter:sortAllFromChest(from)
         )
     end
 
-    splitAndExecSafely(funcsToExec)
+    SplitAndExecSafely(funcsToExec)
 
     return not unregisteredFound -- invert to align with system-wide concept of "false" meaning bad and "true" meaning good
 end
