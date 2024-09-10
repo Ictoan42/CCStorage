@@ -2,20 +2,27 @@
 
 local Result = {}
 
-function Result:unwrap()
+function Result:unwrap(logger) -- logger is optional
     if self.status == "ok" then
         return self.val
     elseif self.status == "err" then
+        print(type(logger.f))
+        if logger ~= nil and type(logger.f) == "function" then
+            logger:f("Attempted to unwrap a Result that was err:\n\"" .. self.err .. "\"\n\n" .. debug.traceback())
+        end
         error("Attempted to unwrap a Result that was err: \"" .. self.err .. "\"\n\n" .. debug.traceback(), 2)
     else
         self:brokenStateError()
     end
 end
 
-function Result:unwrap_err()
+function Result:unwrap_err(logger) -- logger is option
     if self.status == "err" then
         return self.err
     elseif self.status == "ok" then
+        if logger ~= nil and type(logger.f) == "function" then
+            logger:f("Attempted to unwrap_err a Result that was ok:\n\"" .. self.err .. "\"\n\n" .. debug.traceback())
+        end
         error("Attempted to unwrap_err a Result that was ok: \"" .. self.val .. "\"\n\n" .. debug.traceback(), 2)
     else
         self:brokenStateError()
@@ -56,11 +63,11 @@ end
 
 local function result_tostring(result)
     if result:is_ok() then
-        return "Ok(\""..result:unwrap().."\")"
+        return "Ok(\""..tostring(result:unwrap()).."\")"
     elseif result:is_err() then
         return "Err(\""..result:unwrap_err().."\")"
     else
-        self:brokenStateError()
+        result:brokenStateError()
     end
 end
 
@@ -99,4 +106,13 @@ local function Err(val)
     return setmetatable(obj, ResultMetatable)
 end
 
-return {Ok = Ok, Err = Err}
+local function Try(val, err)
+    -- returns Ok(val) if it's not nil, or Err(err) if it is
+    if val == nil then
+        return Err(err)
+    else
+        return Ok(val)
+    end
+end
+
+return {Ok = Ok, Err = Err, Try = Try}
