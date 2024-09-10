@@ -5,8 +5,18 @@ local R = require("CCStorage.Common.ResultClass")
 local SplitAndExecSafely = EU.SplitAndExecSafely
 local Ok, Err, Try = R.Ok, R.Err, R.Try
 
+--- @class ChestArray
+--- @field chests table
+--- @field chestSizes table
+--- @field logger Logger
 local chestArray = {}
 
+--- @param liteMode boolean
+--- @return Result
+--- Get a list of all items in the system. Return format is and array,
+--- in which every entry is the table returned from an individual
+--- chestPeriph.list() call. If liteMode == false, each entry also
+--- contains a chestName and chestSize entry
 function chestArray:list(liteMode)
     -- takes the list() func of every chest in the array and concatenates
     -- them together adds special "chestName" and "chestSize" entries in
@@ -75,6 +85,9 @@ function chestArray:list(liteMode)
     return Ok(arrOut)
 end
 
+--- @return Result
+--- Returns a list of every item in the system. Format is
+--- a table where t["itemID"] = itemCount
 function chestArray:sortedList()
     -- takes the output of :list() and organises it
 
@@ -112,6 +125,10 @@ local CAmetatable = {
     __index = chestArray
 }
 
+--- @param chestArr table
+--- @param logger Logger
+--- @return ChestArray
+--- Create a new ChestArray object. chestArr is an array of chest IDs
 local function new(chestArr, logger)
     -- chestArr is a 1-indexed array of chest identifiers, e.g. minecraft:chest_0
 
