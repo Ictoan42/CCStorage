@@ -27,20 +27,20 @@ This program will respond to requests on the given response port, or 21 if no re
 
 StorageSystem = require("/CCStorage/Server/StorageSystemClass")
 
-modem = peripheral.find("modem")
+local modem = peripheral.find("modem")
 
-function methodDoesNotExistReturn(storsysobj, returnPort, badMethodName)
+local function methodDoesNotExistReturn(storsysobj, returnPort, badMethodName)
     storsysobj.logger:e("Invalid method name: '" .. badMethodName .. "'")
 
     modem.transmit(returnPort, 20, false)
 end
 
-function returnResult(storsysobj, returnPort, valToReturn)
+local function returnResult(storsysobj, returnPort, valToReturn)
     modem.transmit(returnPort, 20, valToReturn)
 end
 
 
-function main(confFilePath)
+local function main(confFilePath)
     if modem.isWireless() then
         -- only wired modem will work for this
         error("Wired modem must be used")
@@ -66,7 +66,7 @@ function main(confFilePath)
                 methodDoesNotExistReturn(storsys, returnPort, methodName)
             else
                 storsys.logger:d("Modem Shim calling method " .. methodName)
-                returnVal = {
+                local returnVal = {
                     storsys[methodName](
                         storsys, -- calling with : usually sends the "self" var as the first argument, we must emulate that here
                         table.unpack(
