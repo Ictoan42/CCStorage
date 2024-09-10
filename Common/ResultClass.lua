@@ -6,9 +6,9 @@ function Result:unwrap()
     if self.status == "ok" then
         return self.val
     elseif self.status == "err" then
-        error("Attempted to unwrap a Result that was err: " .. self.err .. "\n\n" .. debug.traceback(), 2)
+        error("Attempted to unwrap a Result that was err: \"" .. self.err .. "\"\n\n" .. debug.traceback(), 2)
     else
-        error("Attempted to tostring a Result with broken state:" .. self.status .. "\n\n" .. debug.traceback(), 2)
+        self:brokenStateError()
     end
 end
 
@@ -16,18 +16,42 @@ function Result:unwrap_err()
     if self.status == "err" then
         return self.err
     elseif self.status == "ok" then
-        error("Attempted to unwrap_err a Result that was ok:" .. self.val .. "\n\n" .. debug.traceback(), 2)
+        error("Attempted to unwrap_err a Result that was ok: \"" .. self.val .. "\"\n\n" .. debug.traceback(), 2)
     else
-        error("Attempted to tostring a Result with broken state:" .. self.status .. "\n\n" .. debug.traceback(), 2)
+        self:brokenStateError()
+    end
+end
+
+function Result:ok_or(func)
+    if self:is_ok() then
+        return self:unwrap()
+    else
+        return func(self:unwrap_err())
     end
 end
 
 function Result:is_ok()
-    return self.status == "ok"
+    if self.status == "ok" then
+        return true
+    elseif self.status == "err" then
+        return false
+    else
+        self:brokenStateError()
+    end
 end
 
 function Result:is_err()
-    return self.status == "err"
+    if self.status == "err" then
+        return true
+    elseif self.status == "ok" then
+        return false
+    else
+        self:brokenStateError()
+    end
+end
+
+function Result:brokenStateError()
+    error("Attempted to interact with a Result with broken state: \"" .. self.status .. "\"\n\n" .. debug.traceback(), 2)
 end
 
 function result_tostring(result)
@@ -36,12 +60,20 @@ function result_tostring(result)
     elseif result:is_err() then
         return "Err("..result:unwrap_err()..")"
     else
-        error("Attempted to tostring a Result with broken state:" .. self.status .. "\n\n" .. debug.traceback(), 2)
+        self:brokenStateError()
+    end
+end
+
+function result_index(result, key)
+    if Result[key] ~= nil then
+        return Result[key]
+    else
+        error("Attempted to access non-existent field or method \""..key.."\" of a Result\n\n" .. debug.traceback(), 2)
     end
 end
 
 ResultMetatable = {
-    __index = Result,
+    __index = result_index,
     __tostring = result_tostring
 }
 
