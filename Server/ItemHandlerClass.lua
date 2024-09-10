@@ -6,20 +6,34 @@
 --     find any items that aren't registered in the given sortingList
 
 local EU = require("CCStorage.Common.ExecUtils")
+local R = require("CCStorage.Common.ResultClass")
+local Ok, Err, Try = R.Ok, R.Err, R.Try
 local SplitAndExecSafely = EU.SplitAndExecSafely
 
 local itemSorter = {}
 
 function itemSorter:sortItem(slot, from, itemObj)
-    -- uses the stored sortingList to sort the item in the given slot of the given input chest into the stored chestArray
+    -- uses the stored sortingList to sort the item in the given slot
+    -- of the given input chest into the stored chestArray
+    --
+    -- returns Result<bool> where bool encodes whether an item was moved
 
     self.logger:d("ItemHandler executing method sortItem")
 
+    local fromPeriphRes = Try(peripheral.wrap(from), "Peripheral '"..from.."' does not exist")
+    local fromPeriph
+    if fromPeriphRes:is_ok() then
+        fromPeriph = fromPeriphRes:unwrap()
+    else
+        self.logger:e("Tried to sort item from peripheral '"..from..", which doesn't exist")
+        return fromPeriphRes
+    end
+
     -- itemObj can be passed in to dodge a peripheral call
-    itemObj = itemObj or peripheral.call(from, "getItemDetail", slot)
+    itemObj = itemObj or fromPeriph.getItemDetail(slot)
 
     if itemObj == nil then -- if the given slot in "from" is empty
-        return false
+        return Ok(false)
     end
 
     local itemID = itemObj["name"]
@@ -29,28 +43,21 @@ function itemSorter:sortItem(slot, from, itemObj)
     if dest == nil then
         self.logger:d("ItemHandler:sortItem returning false: item has no stored dest")
         -- if the given item doesn't have a stored dest
-        return false
+        return Ok(false)
     else
         self.logger:d("ItemHandler:sortItem finished successfully")
-        peripheral.call(from, "pushItems", dest, slot)
-        return true
+        fromPeriph.pushItems(dest, slot)
+        return Ok(true)
     end
 end
 
+local todo = [[
 
-        -- loop that many times
-        for i=1, loopCount do
-            -- take items out of the table and exec them
-            parallel.waitForAll(
-                table.unpack(
-                    execTable,
-                    ((i-1) * execLimit)+1,
-                    math.min(i * execLimit, n)
-                )
-            )
-        end
-    end
-end
+TODO:
+
+make sortItem resilient to the system running out of space
+
+]]
 
 function itemSorter:sortAllFromChest(from)
     -- uses the stored sortingList to sort all items in the given chest into the stored chestArray
@@ -61,14 +68,20 @@ function itemSorter:sortAllFromChest(from)
         self.logger:e("ItemHandler was passed the non-existent peripheral name \""..from.."\" to sort from")
         return nil
     end
+    local fromPeriphRes = Try(peripheral.wrap(from), "Peripheral '"..from.."' does not exist")
+    local fromPeriph
+    if fromPeriphRes:is_ok() then
+        fromPeriph = fromPeriphRes:unwrap()
+    else
+        self.logger:e("Tried to sort items from chest '"..from.."', which doesn't exist")
+        return fromPeriphRes
+    end
 
-    local list = peripheral.call(from, "list")
+    local list = fromPeriph.list()
 
     local unregisteredFound = false
 
     local funcsToExec = {}
-
-    local results = {}
 
     -- iterate over every slot in the chest, sorting the items in parallel
     for k, v in pairs(list) do
@@ -76,17 +89,24 @@ function itemSorter:sortAllFromChest(from)
             funcsToExec,
             function()
                 local result = self:sortItem(k, from, v)
-                if result == false then
-                    self.logger:d("ItemHandler:sortAllFromChest found unregistered item: " .. v["name"])
-                    unregisteredFound = true
-                end
+                result:handle(
+                    function(itemMoved)
+                        if not itemMoved then
+                            self.logger:d("ItemHandler:sortAllFromChest found unregistered item: " .. v["name"])
+                            unregisteredFound = true
+                        end
+                    end,
+                    function(err)
+                        self.logger:e("Failed to sort item: '"..err.."'")
+                    end
+                )
             end
         )
     end
 
     SplitAndExecSafely(funcsToExec)
 
-    return not unregisteredFound -- invert to align with system-wide concept of "false" meaning bad and "true" meaning good
+    return Ok(not unregisteredFound) -- invert to align with system-wide concept of "false" meaning bad and "true" meaning good
 end
 
 function itemSorter:findUnregisteredItems()
@@ -125,9 +145,9 @@ function itemSorter:findUnregisteredItems()
     end
 
     if #arrOut == 0 then -- if we didn't find anything
-        return false
+        return Ok(false)
     else
-        return arrOut
+        return Ok(arrOut)
     end
 end
 
@@ -137,15 +157,8 @@ function itemSorter:cleanUnregisteredItems(dumpChest)
     self.logger:d("ItemHandler executing method cleanUnregisteredItems")
 
     -- find all unregistered items
-    itemsToClean = self:findUnregisteredItems()
-
-    -- if we never found any unregistered items
-    if itemsToClean == false then
-        return false
-    end
-
-    -- check there's actually enough space
-    freeSpace = peripheral.call(dumpChest, "size") - #peripheral.call(dumpChest, "list") -- "size of chest" - "number of occupied slots"
+    local itemsToClean = self:findUnregisteredItems() -- if we never found any unregistered items if itemsToClean == false then return false end -- check there's actually enough space
+    local freeSpace = peripheral.call(dumpChest, "size") - #peripheral.call(dumpChest, "list") -- "size of chest" - "number of occupied slots"
 
     if freeSpace < #itemsToClean then -- not enough space to safely move items
         return false
