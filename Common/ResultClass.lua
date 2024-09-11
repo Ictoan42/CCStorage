@@ -190,10 +190,16 @@ local function Coerce(result)
         return Err("Input was not a valid result")
     end
     if result.status == "ok" and result.val ~= nil and result.err == nil then
-        return Ok(setmetatable(result, ResultMetatable))
+        return Ok(setmetatable(
+            {status = "ok", val = result.val},
+            ResultMetatable
+        ))
     end
     if result.status == "err" and type(result.err) == "string" and result.val == nil then
-        return Ok(setmetatable(result, ResultMetatable))
+        return Ok(setmetatable(
+            {status = "err", err = result.err},
+            ResultMetatable
+        ))
     end
     return Err("Input was not a valid result")
 end
