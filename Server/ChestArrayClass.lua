@@ -11,7 +11,7 @@ local Ok, Err, Try = R.Ok, R.Err, R.Try
 --- @field logger Logger
 local chestArray = {}
 
---- @param liteMode boolean
+--- @param liteMode? boolean
 --- @return Result
 --- Get a list of all items in the system. Return format is and array,
 --- in which every entry is the table returned from an individual
