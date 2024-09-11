@@ -3,6 +3,8 @@
 -- effectively just a shim API to send standard method calls over a modem connection
 
 local R = require("/CCStorage/Common/ResultClass")
+local PR = require("cc.pretty")
+local PRW = function(str) return PR.render(PR.pretty(str)) end
 local Ok, Err, Try, Coerce = R.Ok, R.Err, R.Try, R.Coerce
 
 --- @param response table
@@ -20,7 +22,7 @@ local function decodeResponse(response)
     if convertRes:is_ok() then
         outTab[1] = convertRes:unwrap()
     else
-        return Err("Does not contain a valid result")
+        return Err("Does not contain a valid result:\n\n"..PRW(response))
     end
     outTab[2] = response[2]
     return Ok(outTab)
@@ -104,16 +106,16 @@ function RemoteStorageSystem:forgetItem(itemID)
 end
 
 --- @param dumpChest string
---- @return Result
+--- @return Result itemsMoved the number of items that have been moved
 --- Moves any unregistered items into dumpChest
 function RemoteStorageSystem:cleanUnregisteredItems(dumpChest)
     return self:sendReq({"cleanUnregisteredItems", dumpChest})
 end
 
---- @return ConfigFile
+--- @return Result cfg the ConfigFile object
 --- Get the system's configuration
 function RemoteStorageSystem:getConfig()
-    return self:sendReq({"getConfig"}):unwrap()
+    return self:sendReq({"getConfig"})
 end
 
 function RemoteStorageSystem:sendReq(arr)
