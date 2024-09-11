@@ -1,7 +1,7 @@
 -- object wrapper for the array of storage chests
 
-local EU = require("CCStorage.Common.ExecUtils")
-local R = require("CCStorage.Common.ResultClass")
+local EU = require("/CCStorage.Common.ExecUtils")
+local R = require("/CCStorage.Common.ResultClass")
 local SplitAndExecSafely = EU.SplitAndExecSafely
 local Ok, Err, Try = R.Ok, R.Err, R.Try
 
@@ -127,10 +127,15 @@ local CAmetatable = {
 
 --- @param chestArr table
 --- @param logger Logger
---- @return ChestArray
+--- @return Result
 --- Create a new ChestArray object. chestArr is an array of chest IDs
 local function new(chestArr, logger)
     -- chestArr is a 1-indexed array of chest identifiers, e.g. minecraft:chest_0
+
+    -- safety check
+    if #chestArr == 0 then
+        return Err("Given array of peripheral IDs is empty")
+    end
 
     -- get sizes of chests
     local funcsToExec = {}
@@ -140,18 +145,24 @@ local function new(chestArr, logger)
         table.insert(
             funcsToExec,
             function()
-                chestSizesTable[v] = peripheral.call(v, "size")
+                chestSizesTable[v] = Try(
+                    peripheral.call(v, "size"), "Peripheral '"..v.."' does not exist"
+                ):ok_or(function(err)
+                    logger:e("Failed to get size of storage block while constructing ChestArray: "..err)
+                    logger:e("Ignoring specified peripheral ID")
+                    chestArr[k] = nil
+                end)
             end
         )
     end
 
     SplitAndExecSafely(funcsToExec)
 
-    return setmetatable({
+    return Ok(setmetatable({
         chests = chestArr,
         chestSizes = chestSizesTable,
         logger = logger
-    }, CAmetatable)
+    }, CAmetatable))
 end
 
 return { new = new }

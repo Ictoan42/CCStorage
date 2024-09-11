@@ -5,8 +5,8 @@
 --     find items in the given chestArray
 --     find any items that aren't registered in the given sortingList
 
-local EU = require("CCStorage.Common.ExecUtils")
-local R = require("CCStorage.Common.ResultClass")
+local EU = require("/CCStorage.Common.ExecUtils")
+local R = require("/CCStorage.Common.ResultClass")
 local Ok, Err, Try = R.Ok, R.Err, R.Try
 local SplitAndExecSafely = EU.SplitAndExecSafely
 
@@ -66,25 +66,18 @@ local todo = [[
 TODO:
 
 convert all the other stuff to use Results
-add doc annotations to all this shit
 make sortItem resilient to the system running out of space
 
 ]]
 
---- @param from InventoryPeripheral
---- @return nil
+--- @param from string
+--- @return Result
 --- Sort all items from the given chest into the system
 function itemSorter:sortAllFromChest(from)
     -- uses the stored sortingList to sort all items in the given chest into the stored chestArray
 
-    --TODO: make this use results properly
-
     self.logger:d("ItemHandler executing method sortAllFromChest")
 
-    if not peripheral.isPresent(from) then
-        self.logger:e("ItemHandler was passed the non-existent peripheral name \""..from.."\" to sort from")
-        return Err("Peripheral does not exist")
-    end
     local fromPeriphRes = Try(peripheral.wrap(from), "Peripheral '"..from.."' does not exist")
     local fromPeriph
     if fromPeriphRes:is_ok() then
@@ -126,7 +119,7 @@ function itemSorter:sortAllFromChest(from)
     return Ok(not unregisteredFound) -- invert to align with system-wide concept of "false" meaning bad and "true" meaning good
 end
 
---- @return Result
+--- @return Result (list of items OR false)
 --- Finds a list of items in the system that aren't currently
 --- registered and returns it
 function itemSorter:findUnregisteredItems()
@@ -135,7 +128,13 @@ function itemSorter:findUnregisteredItems()
 
     self.logger:d("ItemHandler executing method findUnregisteredItems")
 
-    local bigList = self.chestArray:list()
+    local bigList
+    local res = self.chestArray:list()
+    if res:is_ok() then
+        bigList = res:unwrap()
+    else
+        return res
+    end
     local arrOut = {}
     arrOut["count"] = 0
 
@@ -169,8 +168,8 @@ function itemSorter:findUnregisteredItems()
     end
 end
 
---- @param dumpChest InventoryPeripheral
---- @return boolean
+--- @param dumpChest string
+--- @return Result
 --- Moves any unregistered items into dumpChest
 function itemSorter:cleanUnregisteredItems(dumpChest)
     -- moves all unregistered items to the given output chest
@@ -178,27 +177,36 @@ function itemSorter:cleanUnregisteredItems(dumpChest)
     self.logger:d("ItemHandler executing method cleanUnregisteredItems")
 
     -- find all unregistered items
-    local itemsToClean = self:findUnregisteredItems() -- if we never found any unregistered items if itemsToClean == false then return false end -- check there's actually enough space
-    local freeSpace = peripheral.call(dumpChest, "size") - #peripheral.call(dumpChest, "list") -- "size of chest" - "number of occupied slots"
+    local itemsToClean
+    local res = self:findUnregisteredItems() -- if we never found any unregistered items if itemsToClean == false then return false end -- check there's actually enough space
+    if res:is_err() then return res
+    else itemsToClean = res:unwrap() end
 
-    if freeSpace < #itemsToClean then -- not enough space to safely move items
-        return false
+    local dumpChestPeriph
+    local dumpChestPeriphRes = Try(
+        peripheral.wrap(dumpChest), "Peripheral '"..dumpChest.."' does not exist"
+    )
+    if dumpChestPeriphRes:is_ok() then
+        dumpChestPeriph = dumpChestPeriphRes:unwrap()
+    else return dumpChestPeriphRes end
+
+    local freeSpace = dumpChestPeriph.size() - #dumpChestPeriph.list() -- "size of chest" - "number of occupied slots"
+
+    if freeSpace < #res then -- not enough space to safely move items
+        return Err("Not enough free space in output")
     end
 
     -- iterate over every unregistered item that was found
     for k, v in ipairs(itemsToClean) do -- using ipairs ignores the "count" entry without an explicit check
         -- move the item to the output
-        peripheral.call(
-            dumpChest,
-            "pullItems",
-            v[1],
-            v[2]
-        )
+        dumpChestPeriph.pullItems(v[1], v[2])
     end
+
+    return Ok(nil)
 end
 
 --- @param itemName string
---- @return any
+--- @return Result
 --- Finds the specified item in the system.
 --- Return format:
 --- {
@@ -220,7 +228,13 @@ function itemSorter:findItems(itemName)
 
     self.logger:d("ItemHandler executing method findItems")
 
-    local bigList = self.chestArray:list()
+    local bigList
+    local res = self.chestArray:list()
+    if res:is_ok() then
+        bigList = res:unwrap()
+    else
+        return res
+    end
     local arrOut = {}
     arrOut["count"] = 0
 
@@ -247,9 +261,9 @@ function itemSorter:findItems(itemName)
     end
 
     if #arrOut == 0 then -- if we didn't find anything
-        return false
+        return Ok(false)
     else
-        return arrOut
+        return Ok(arrOut)
     end
 end
 
@@ -257,7 +271,7 @@ end
 --- @param to string
 --- @param count? number
 --- @param toSlot? number
---- @return boolean
+--- @return Result
 --- Finds the desired item, and moves 'count' of that item
 --- to 'to'. 'count' is 64 by default.
 function itemSorter:retrieveItems(itemName, to, count, toSlot)
@@ -265,20 +279,31 @@ function itemSorter:retrieveItems(itemName, to, count, toSlot)
 
     self.logger:d("ItemHandler executing method retrieveItems")
 
-    local count = count or 64 -- if count is not specified, assume a stack
+    count = count or 64 -- if count is not specified, assume a stack
+
+    local toPeriph
+    local toPeriphRes = Try(
+        peripheral.wrap(to), "Peripheral '"..to.."' does not exist"
+    )
+    if toPeriphRes:is_ok() then toPeriph = toPeriphRes:unwrap()
+    else return toPeriphRes end
 
     -- find item
     local chestName = self.sortingList:getDest(itemName)
 
     -- if the item isn't registered
-    if chestName == nil then return false end
+    if chestName == nil then
+        --TODO: an item not being registered shouldn't mean it can't be retrieved
+        self.logger:d("Cannot retrieve item '"..itemName.."' because it is not registered")
+        return Ok(false)
+    end
 
     local itemsInChest = peripheral.call(chestName, "list")
 
     -- does the chest array contain at least {count} of the item
     if count > self.chestArray:sortedList()[itemName] then -- if we do not have enough
-        print("too few items")
-        return false
+        self.logger:d("Cannot retrieve "..count.." of item '"..itemName.."'; not enough in storage")
+        return Ok(false)
     end
 
     -- iterate over every slot in the chest
@@ -289,22 +314,17 @@ function itemSorter:retrieveItems(itemName, to, count, toSlot)
                 -- we found the item
                 if itemsInChest[i]["count"] >= count then
                     -- there is enough of this item in the first stack to do the move in one go
-                    print(to)
-                    peripheral.call(
-                        to, -- call the destination chest
-                        "pullItems", -- with the pullItems method
+                    toPeriph.pullItems(
                         chestName, -- to pull from the chest we found the item in
                         i, -- from the slot we found the item in
                         count, -- with the count that was specified
                         toSlot -- to the slot specified
                     )
-                    return true
+                    return Ok(true)
                 else
                     -- move what is there, then recur this function with a reduced desired count
                     print("Moving what's there")
-                    local numberOfItemsMoved = peripheral.call(
-                        to,
-                        "pullItems",
+                    local numberOfItemsMoved = toPeriph.pullItems(
                         chestName,
                         i,
                         nil, -- don't specify a count so it moves all items there
@@ -317,11 +337,13 @@ function itemSorter:retrieveItems(itemName, to, count, toSlot)
                         count - numberOfItemsMoved, -- no need to clamp because count has to be larger than numberOfItemsMoved for us to be here in the first place
                         toSlot
                     )
-                    return true
+                    return Ok(true)
                 end
             end
         end
     end
+
+    return Ok(true)
 end
 
 local itemSorterMetatable = {

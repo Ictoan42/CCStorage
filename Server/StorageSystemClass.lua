@@ -1,11 +1,11 @@
 -- object wrapper for the storage system as a whole
 
-ConfigFile = require("CCStorage.Common.ConfigFileClass")
-Result = require("CCStorage.Common.ResultClass")
-ChestArray = require("CCStorage.Server.ChestArrayClass")
-ItemHandler = require("CCStorage.Server.ItemHandlerClass")
-SortingList = require("CCStorage.Server.SortingListClass")
-CCLogger = require("CCLogger") -- this file is in root
+ConfigFile = require("/CCStorage.Common.ConfigFileClass")
+Result = require("/CCStorage.Common.ResultClass")
+ChestArray = require("/CCStorage.Server.ChestArrayClass")
+ItemHandler = require("/CCStorage.Server.ItemHandlerClass")
+SortingList = require("/CCStorage.Server.SortingListClass")
+CCLogger = require("/CCLogger") -- this file is in root
 local pr = require("cc.pretty")
 local prp = pr.pretty_print
 Ok, Err, Try = Result.Ok, Result.Err, Result.Try
@@ -68,7 +68,7 @@ function StorageSystem:organisedList()
 end
 
 --- @param itemID string
---- @return any
+--- @return Result
 --- Finds the specified item in the system.
 --- Return format:
 --- {
@@ -79,8 +79,8 @@ function StorageSystem:findItems(itemID)
     return self.itemHandler:findItems(itemID)
 end
 
---- @param inputChestID InventoryPeripheral
---- @return nil
+--- @param inputChestID string
+--- @return Result
 --- Sort all items from the given chest into the system
 function StorageSystem:sortFromInput(inputChestID)
     return self.itemHandler:sortAllFromChest(inputChestID)
@@ -90,54 +90,62 @@ end
 --- @param outputChestID string
 --- @param count? number
 --- @param toSlot? number
---- @return boolean
+--- @return Result
 --- Finds the desired item, and moves 'count' of that item
 --- to 'to'. 'count' is 64 by default.
 function StorageSystem:retrieve(itemID, outputChestID, count, toSlot)
     return self.itemHandler:retrieveItems(itemID, outputChestID, count, toSlot)
 end
 
---- @return boolean
+--- @return Result (number of items registered)
 --- Find all unregistered items in the system and register to the
 --- chest they were found in
 function StorageSystem:detectAndRegisterItems()
     self.logger:d("StorageSystem executing method detectAndRegisterItems")
 
-    local unregisteredItems = self.itemHandler:findUnregisteredItems()
+    local res = self.itemHandler:findUnregisteredItems()
+    local unregisteredItems
+    if res:is_ok() then
+        unregisteredItems = res
+    else return res end
 
     if unregisteredItems == false then -- no unregistered items found
-        return false
+        return Ok(0)
     end
 
     -- iterate over all unregistered items, registering them
+    local itemsRegistered = 0
     for k, v in ipairs(unregisteredItems) do -- ipairs() to implicitly ignore the "count" entry
         -- addDest just ignores us if we register the same item twice so blind iteration is fine
         -- alright "fine" might be a stretch but it won't crash at least
-        self.sortingList:addDest(
+        local res2 = self.sortingList:addDest(
             v[4], -- item name
             v[1] -- chest name
         )
+        if res2:is_err() then return res2
+        else itemsRegistered = itemsRegistered + res2:unwrap() end
     end
 
+    return Ok(itemsRegistered)
 end
 
 --- @param itemID string
 --- @param chestID string
---- @return boolean
+--- @return Result (boolean)
 --- Registers the given item to the given chest
 function StorageSystem:registerItem(itemID, chestID)
     return self.sortingList:addDest(itemID, chestID)
 end
 
 --- @param itemID string
---- @return boolean
+--- @return Result (boolean)
 --- Unregisters the given item from the system
 function StorageSystem:forgetItem(itemID)
     return self.sortingList:removeDest(itemID)
 end
 
---- @param dumpChest InventoryPeripheral
---- @return boolean
+--- @param dumpChest string
+--- @return Result
 --- Moves any unregistered items into dumpChest
 function StorageSystem:cleanUnregisteredItems(dumpChest)
     return self.itemHandler:cleanUnregisteredItems(dumpChest)
@@ -247,7 +255,7 @@ local function new(confFilePath)
         chestArray = ChestArray.new(
             chests,
             logger
-        )
+        ):unwrap(logger)
 
     end
 
@@ -269,7 +277,7 @@ local function new(confFilePath)
             cfg.sortingListBackupFilePath,
             cfg.sortingListBrokenFilePath,
             logger
-        )
+        ):unwrap(logger)
     end
 
     ---------------
