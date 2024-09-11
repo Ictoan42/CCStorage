@@ -10,8 +10,17 @@ local pr = require("cc.pretty")
 local prp = pr.pretty_print
 Ok, Err, Try = Result.Ok, Result.Err, Result.Try
 
+--- @class StorageSystem
+--- @field logger Logger
+--- @field confFile ConfigFile
+--- @field chestArray ChestArray
+--- @field sortingList SortingList
+--- @field itemHandler ItemHandler
 local StorageSystem = {}
 
+--- @param listStr string
+--- @param s string
+--- @return boolean
 local function isInList(listStr, s)
     -- internal func for decoding lists from the config file
     -- checks whether the given string "s" is contained within the list
@@ -25,6 +34,9 @@ local function isInList(listStr, s)
     return false -- only get here if all checks fail
 end
 
+--- @param listStr string
+--- @param s string
+--- @return boolean
 local function isInListSegment(listStr, s)
     -- internal func, used for decoding lists in config file
     -- checks whether any entries in the list are substrings of "s"
@@ -38,26 +50,56 @@ local function isInListSegment(listStr, s)
     return false
 end
 
+--- @param liteMode? boolean
+--- @return Result
+--- Get a list of all items in the system. Return format is and array,
+--- in which every entry is the table returned from an individual
+--- chestPeriph.list() call. If liteMode == false, each entry also
+--- contains a chestName and chestSize entry
 function StorageSystem:list(liteMode)
     return self.chestArray:list(liteMode)
 end
 
+--- @return Result
+--- Returns a list of every item in the system. Format is
+--- a table where t["itemID"] = itemCount
 function StorageSystem:organisedList()
     return self.chestArray:sortedList()
 end
 
+--- @param itemID string
+--- @return any
+--- Finds the specified item in the system.
+--- Return format:
+--- {
+---  {chestName, slot, count, itemName},
+---  {chestName, slot, count, itemName}
+--- }
 function StorageSystem:findItems(itemID)
     return self.itemHandler:findItems(itemID)
 end
 
+--- @param from InventoryPeripheral
+--- @return nil
+--- Sort all items from the given chest into the system
 function StorageSystem:sortFromInput(inputChestID)
     return self.itemHandler:sortAllFromChest(inputChestID)
 end
 
+--- @param itemID string
+--- @param outputChestID string
+--- @param count? number
+--- @param toSlot? number
+--- @return boolean
+--- Finds the desired item, and moves 'count' of that item
+--- to 'to'. 'count' is 64 by default.
 function StorageSystem:retrieve(itemID, outputChestID, count, toSlot)
     return self.itemHandler:retrieveItems(itemID, outputChestID, count, toSlot)
 end
 
+--- @return boolean
+--- Find all unregistered items in the system and register to the
+--- chest they were found in
 function StorageSystem:detectAndRegisterItems()
     self.logger:d("StorageSystem executing method detectAndRegisterItems")
 
@@ -79,18 +121,30 @@ function StorageSystem:detectAndRegisterItems()
 
 end
 
+--- @param itemID string
+--- @param chestID string
+--- @return boolean
+--- Registers the given item to the given chest
 function StorageSystem:registerItem(itemID, chestID)
     return self.sortingList:addDest(itemID, chestID)
 end
 
+--- @param itemID string
+--- @return boolean
+--- Unregisters the given item from the system
 function StorageSystem:forgetItem(itemID)
     return self.sortingList:removeDest(itemID)
 end
 
+--- @param dumpChest InventoryPeripheral
+--- @return boolean
+--- Moves any unregistered items into dumpChest
 function StorageSystem:cleanUnregisteredItems(dumpChest)
     return self.itemHandler:cleanUnregisteredItems(dumpChest)
 end
 
+--- @return ConfigFile
+--- Get the system's configuration
 function StorageSystem:getConfig()
     return self.confFile
 end
@@ -99,6 +153,10 @@ local StorageSystemMetatable = {
     __index = StorageSystem
 }
 
+--- @param confFilePath string
+--- @return StorageSystem
+--- Create a new StorageSystem object, loading it's config from the
+--- given file
 local function new(confFilePath)
 
     -- create config file obj

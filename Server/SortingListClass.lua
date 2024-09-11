@@ -1,7 +1,14 @@
 -- object wrapper for the list to sort items with
 
+--- @class SortingList
+--- @field dests table
+--- @field file string
+--- @field backupFile string
+--- @field logger Logger
 local sortingList = {}
 
+--- @return string
+--- Converts the stored list to a single string, and returns it
 function sortingList:serialize()
     -- converts the stored list into a single string
     -- each entry is in format "modid:itemid modid:chestname_id"
@@ -16,7 +23,10 @@ function sortingList:serialize()
     return strOut
 end
 
-function sortingList:importFromText(text)
+--- @param str string
+--- @return boolean
+--- Deserializes a list from the given string
+function sortingList:importFromText(str)
     -- imports a list from a string
     -- string is the same format as is output by :serialize()
 
@@ -26,7 +36,7 @@ function sortingList:importFromText(text)
 
     -- iterate over every entry in the file
     -- entries are in form: "modid:itemid modid:chestname_id"
-    for entry in text:gmatch("([^\n]+)") do -- regex bollocks to seperate with the newlines
+    for entry in str:gmatch("([^\n]+)") do -- regex bollocks to seperate with the newlines
 
         local spacePos = entry:find(" ")
         if spacePos == nil then -- this line is munted
@@ -50,6 +60,11 @@ function sortingList:importFromText(text)
     return true
 end
 
+--- @param filePath string path of the sorting list file
+--- @param backupFilePath string path of the backup sorting list file
+--- @param muntedFilePath string path of where to put the broken file in case of failure
+--- @return boolean
+--- Deserializes a list from the given file
 function sortingList:importFromFile(filePath, backupFilePath, muntedFilePath)
     -- simple function to read a file and pass it to :importFromText()
 
@@ -99,16 +114,20 @@ function sortingList:importFromFile(filePath, backupFilePath, muntedFilePath)
             self.logger:e("Backup recover complete")
 
         end
-    end    
-    
+    end
+
     return true
 end
 
+--- @param itemName string
+--- @param chestName string
+--- @return boolean
+--- Registers the given item to the given chest
 function sortingList:addDest(itemName, chestName)
     -- add a destination to local memory and disk
     -- saved to disk by appending in the standard format to the storageFile
 
-    self.logger:d("SortingList executing method addDest")    
+    self.logger:d("SortingList executing method addDest")
 
     if self.dests[itemName] ~= nil then
         print("SortingList.addDest() error - item already has destination")
@@ -126,6 +145,9 @@ function sortingList:addDest(itemName, chestName)
     end
 end
 
+--- @param itemName string
+--- @return boolean
+--- Unregisters the given item from the system
 function sortingList:removeDest(itemName)
     -- remove the specified destination from local memory and disk storage
 
@@ -149,6 +171,8 @@ function sortingList:removeDest(itemName)
 
 end
 
+--- @param itemName string
+--- @return string
 function sortingList:getDest(itemName)
     self.logger:d("SortingList executing method getDest")
 
@@ -160,6 +184,12 @@ local sortingListMetatable = {
     __index = sortingList,
 }
 
+--- @param storageFile string path of the sorting list file
+--- @param backupFile string path of the backup sorting list file
+--- @param muntedFilePath string path of where to put the broken file in case of failure
+--- @param logger Logger
+--- @return SortingList
+--- Creates a new Sorting List
 local function new(storageFile, backupFile, muntedFilePath, logger)
 
     if storageFile == nil then

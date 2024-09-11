@@ -10,8 +10,18 @@ local R = require("CCStorage.Common.ResultClass")
 local Ok, Err, Try = R.Ok, R.Err, R.Try
 local SplitAndExecSafely = EU.SplitAndExecSafely
 
+--- @class ItemHandler
+--- @field chestArray ChestArray
+--- @field sortingList SortingList
+--- @field logger Logger
 local itemSorter = {}
 
+--- @param slot number
+--- @param from InventoryPeripheral
+--- @param itemObj? table
+--- @return Result
+--- Sort an item from 'from' into the system. itemObj can be
+--- passed in to avoid a peripheral call
 function itemSorter:sortItem(slot, from, itemObj)
     -- uses the stored sortingList to sort the item in the given slot
     -- of the given input chest into the stored chestArray
@@ -55,18 +65,25 @@ local todo = [[
 
 TODO:
 
+convert all the other stuff to use Results
+add doc annotations to all this shit
 make sortItem resilient to the system running out of space
 
 ]]
 
+--- @param from InventoryPeripheral
+--- @return nil
+--- Sort all items from the given chest into the system
 function itemSorter:sortAllFromChest(from)
     -- uses the stored sortingList to sort all items in the given chest into the stored chestArray
+
+    --TODO: make this use results properly
 
     self.logger:d("ItemHandler executing method sortAllFromChest")
 
     if not peripheral.isPresent(from) then
         self.logger:e("ItemHandler was passed the non-existent peripheral name \""..from.."\" to sort from")
-        return nil
+        return Err("Peripheral does not exist")
     end
     local fromPeriphRes = Try(peripheral.wrap(from), "Peripheral '"..from.."' does not exist")
     local fromPeriph
@@ -109,6 +126,9 @@ function itemSorter:sortAllFromChest(from)
     return Ok(not unregisteredFound) -- invert to align with system-wide concept of "false" meaning bad and "true" meaning good
 end
 
+--- @return Result
+--- Finds a list of items in the system that aren't currently
+--- registered and returns it
 function itemSorter:findUnregisteredItems()
     -- returns the items found in the system which were not registered
     -- return format is the same as :findItems()
@@ -123,9 +143,7 @@ function itemSorter:findUnregisteredItems()
     for k, i in pairs(bigList) do -- iterate over every chest
         -- "i" is an array like how chestPeriph.list() returns
         for l, j in pairs(i) do -- iterate over every entry in array
-            
             if l ~= "chestName" and l ~= "chestSize" then -- ignore the special entries
-                
                 if self.sortingList:getDest(j["name"]) == nil then -- the item in this slot is unregistered
 
                     table.insert(arrOut,
@@ -151,6 +169,9 @@ function itemSorter:findUnregisteredItems()
     end
 end
 
+--- @param dumpChest InventoryPeripheral
+--- @return boolean
+--- Moves any unregistered items into dumpChest
 function itemSorter:cleanUnregisteredItems(dumpChest)
     -- moves all unregistered items to the given output chest
 
@@ -176,6 +197,14 @@ function itemSorter:cleanUnregisteredItems(dumpChest)
     end
 end
 
+--- @param itemName string
+--- @return any
+--- Finds the specified item in the system.
+--- Return format:
+--- {
+---  {chestName, slot, count, itemName},
+---  {chestName, slot, count, itemName}
+--- }
 function itemSorter:findItems(itemName)
     -- return the chest name(s) and slot number(s) of all occurrences of the item
     -- returned as an array of array, structured like this:
@@ -198,9 +227,7 @@ function itemSorter:findItems(itemName)
     for k, i in pairs(bigList) do -- iterate over every chest
         -- "i" is an array like how chestPeriph.list() returns
         for l, j in pairs(i) do -- iterate over every entry in array
-            
             if l ~= "chestName" and l ~= "chestSize" then -- ignore the special entries
-                
                 if j["name"] == itemName then
 
                     table.insert(arrOut,
@@ -226,6 +253,13 @@ function itemSorter:findItems(itemName)
     end
 end
 
+--- @param itemName string
+--- @param to string
+--- @param count? number
+--- @param toSlot? number
+--- @return boolean
+--- Finds the desired item, and moves 'count' of that item
+--- to 'to'. 'count' is 64 by default.
 function itemSorter:retrieveItems(itemName, to, count, toSlot)
     -- retrieves the given item from the chestArray and places it in the given destination chest
 
@@ -251,7 +285,6 @@ function itemSorter:retrieveItems(itemName, to, count, toSlot)
     for i=1, peripheral.call(chestName, "size") do
 
         if itemsInChest[i] ~= nil then -- if this slot contains an item
-            
             if itemsInChest[i]["name"] == itemName then
                 -- we found the item
                 if itemsInChest[i]["count"] >= count then
@@ -295,10 +328,15 @@ local itemSorterMetatable = {
     __index = itemSorter,
 }
 
-local function new(arrayTo, sortingList, logger)
+--- @param chestArray ChestArray
+--- @param sortingList SortingList
+--- @param logger Logger
+--- @return ItemHandler
+--- Creates a new ItemHandler
+local function new(chestArray, sortingList, logger)
     return setmetatable(
         {
-            chestArray = arrayTo,
+            chestArray = chestArray,
             sortingList = sortingList,
             logger = logger
         },
