@@ -63,7 +63,7 @@ function MainButtonPanel:registerHandler(evIn)
 
 end
 
-function new(winManObj, rssObj, name, x, y, w, h, bgcol, fgcol, bordercol, statusWindowObj, inputChestID)
+local function new(winManObj, rssObj, name, x, y, w, h, bgcol, fgcol, bordercol, statusWindowObj, inputChestID)
 
     local mbp = {}
 

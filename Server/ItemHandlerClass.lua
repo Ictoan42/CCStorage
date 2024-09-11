@@ -17,7 +17,7 @@ local SplitAndExecSafely = EU.SplitAndExecSafely
 local itemSorter = {}
 
 --- @param slot number
---- @param from InventoryPeripheral
+--- @param from string
 --- @param itemObj? table
 --- @return Result
 --- Sort an item from 'from' into the system. itemObj can be

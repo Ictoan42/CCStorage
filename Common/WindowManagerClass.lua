@@ -39,7 +39,7 @@ function WindowManager:removeWindow(name)
 end
 
 function WindowManager:handleMonitorTouch(evName, side, x, y)
-    
+
     -- find which window this touch was on
     local windowToUse
     for k, v in pairs(self.windows) do
@@ -73,7 +73,7 @@ local WindowManagerMetatable = {
     __index = WindowManager
 }
 
-function new(term)
+local function new(term)
 
     local o = setmetatable(
         {

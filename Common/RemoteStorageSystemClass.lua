@@ -74,7 +74,6 @@ function RemoteStorageSystem:sendNonBlockingReq(arr)
         error("RemoteStorageSystemClass shat itself, non-table passed to sendBlockingReq")
     end
     self.modem.transmit(self.outPort, self.inPort, arr)
-    return
 end
 
 local RemoteStorageSystemMetatable = {

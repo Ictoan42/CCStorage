@@ -54,11 +54,11 @@ function StatusWindow:render()
 
     self.win:clear(true)
 
-    topLineY = ( self.win.height - #self.message ) / 2
+    local topLineY = ( self.win.height - #self.message ) / 2
 
     for k, v in pairs(self.message) do
 
-        cX = ( self.win.width - string.len(v) ) / 2
+        local cX = ( self.win.width - string.len(v) ) / 2
 
         self.win:setCursorPos(cX, topLineY + (k - 1))
 
@@ -68,7 +68,7 @@ function StatusWindow:render()
 
 end
 
-function new(winManObj, rssObj, name, x, y, w, h, bgcol, fgcol, bordercol)
+local function new(winManObj, rssObj, name, x, y, w, h, bgcol, fgcol, bordercol)
 
     local sw = {}
 

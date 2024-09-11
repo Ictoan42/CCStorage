@@ -58,7 +58,7 @@ function AdvancedWindow:activateButtonByID(id)
 end
 
 function AdvancedWindow:activateButtonByCoord(x, y)
-    
+
     for k, v in pairs(self.buttons) do
         if x >= v.x and y >= v.y and x <= v.x + v.w and y <= v.y + v.h then
             self:activateButtonByID(v.id)
@@ -85,10 +85,10 @@ function AdvancedWindow:setCursorPos(x, y)
 end
 
 function AdvancedWindow:drawBorder()
-    
+
     local w = self.outerWin
     local wX, wY = w.getSize()
-    
+
     -- draw corners
     --- top left
     w.setBackgroundColour(self.backgroundColour)
@@ -145,7 +145,7 @@ end
 function AdvancedWindow:setBackgroundColour(col)
 
     self.backgroundColour = col
-    
+
 end
 
 function AdvancedWindow:setTextColour(col)
@@ -163,7 +163,7 @@ end
 function AdvancedWindow:getBackgroundColour(col)
 
     return self.backgroundColour
-    
+
 end
 
 function AdvancedWindow:getTextColour(col)

@@ -31,7 +31,7 @@ end
 function ItemCountWatcher:draw(itemsList)
 
     -- itemsList is an argument to pass in a premade list from rss:organisedList()
-    
+
     local items = itemsList
 
     -- transform into array where entries are in format {count, name}
@@ -75,7 +75,7 @@ function ItemCountWatcher:draw(itemsList)
     --)
 
     local maxNameLength = self.win.width - (maxNumLength + string.len(" - "))
-    
+
     -- offset of the entire list down to leave space for top lines
     local yOffset = 2
 
@@ -83,7 +83,7 @@ function ItemCountWatcher:draw(itemsList)
         self.win:setCursorPos(1, y + yOffset)
         local c = ccs.ensure_width(tostring(sortedList[y][1]), maxNumLength)
         local n = tostring(sortedList[y][2])
-        n2 = n:sub(1, math.min(n:len(), maxNameLength - 4))
+        local n2 = n:sub(1, math.min(n:len(), maxNameLength - 4))
 
         if n:len() > maxNameLength - 4 then
             n2 = n2 .. ".."
@@ -91,10 +91,10 @@ function ItemCountWatcher:draw(itemsList)
 
         self.win:print(c .. " - " .. n2)
     end
-    
+
 end
 
-function new(winManObj, rssObj, name, x, y, w, h, bgcol, fgcol, bordercol, statusWindowObj)
+local function new(winManObj, rssObj, name, x, y, w, h, bgcol, fgcol, bordercol, statusWindowObj)
     -- winManObj is the window manager object to draw onto
     -- rssObj is the remote storage system object to watch the size of
 
