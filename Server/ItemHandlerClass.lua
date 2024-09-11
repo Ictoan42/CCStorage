@@ -196,12 +196,13 @@ function itemSorter:cleanUnregisteredItems(dumpChest)
     end
 
     -- iterate over every unregistered item that was found
+    local itemsMoved = 0
     for k, v in ipairs(itemsToClean) do -- using ipairs ignores the "count" entry without an explicit check
         -- move the item to the output
-        dumpChestPeriph.pullItems(v[1], v[2])
+        itemsMoved = itemsMoved + dumpChestPeriph.pullItems(v[1], v[2])
     end
 
-    return Ok(true)
+    return Ok(itemsMoved)
 end
 
 --- @param itemName string
