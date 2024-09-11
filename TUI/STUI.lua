@@ -1,22 +1,24 @@
-RSS = require("/CCStorage/Common/RemoteStorageSystemClass")
-SB = require("/CCStorage/TUI/SearchBoxClass")
+RSS = require("/CCStorage.Common.RemoteStorageSystemClass")
+SB = require("/CCStorage.TUI.SearchBoxClass")
 CCS = require("cc.strings")
 PR = require("cc.pretty")
+PRW = function(obj) return PR.render(PR.pretty(obj)) end
 
 -- this program is structured as an event loop that reacts to key press events.
 -- specifically, it reacts to "char" events to type in the search box, and then
 -- "key" and "key_up" events to track backspaces and ctrl-key combos
 
-dbgmon = peripheral.wrap("right")
-dbgmon.setTextScale(0.5)
-dbgmon.clear()
+-- local dbgmon = peripheral.wrap("right")
+-- dbgmon.setTextScale(0.5)
+-- dbgmon.clear()
 
-outChest = "minecraft:chest_271"
-modem = peripheral.find("modem")
-rss = RSS.new(modem)
-termx, termy = term.getSize()
+local outChest = "minecraft:chest_271"
+--- @type ccTweaked.peripherals.Modem
+local modem = peripheral.find("modem")
+local rss = RSS.new(modem)
+local termx, termy = term.getSize()
 term.clear()
-sb = SB.new(
+local sb = SB.new(
     term.current(),
     2,
     4,
@@ -30,12 +32,15 @@ sb = SB.new(
     colours.grey
 )
 
+local ctrlIsHeld
 
-function getItemList()
-    local listIn = rss:organisedList()[1]
+local function getItemList()
+    local listIn = rss:organisedList():unwrap()[1]:unwrap()
+    -- DBGMONPRINT(listIn)
 
     local largestNumber = 0
     for k, v in pairs(listIn) do
+        -- DBGMONPRINT(v)
         if v >= largestNumber then largestNumber = v end
     end
     local numLength = string.len(tostring(largestNumber))
@@ -43,8 +48,8 @@ function getItemList()
 
     local arrOut = {} -- table in format {item_list_entry_string, count}
     for k, v in pairs(listIn) do
-        numStr = CCS.ensure_width(tostring(v), numLength)
-        nameStr = CCS.ensure_width(tostring(k), wordLength)
+        local numStr = CCS.ensure_width(tostring(v), numLength)
+        local nameStr = CCS.ensure_width(tostring(k), wordLength)
         table.insert(
             arrOut,
             {
@@ -56,7 +61,7 @@ function getItemList()
                 v
             }
         )
-    end 
+    end
 
     -- sort by count
     table.sort(
@@ -78,7 +83,7 @@ function getItemList()
     return stringArrOut
 end
 
-function refreshItemList()
+local function refreshItemList()
     sb:setListOverride("Refreshing...")
     sb:draw()
     sb:setSearchList(
@@ -88,14 +93,14 @@ function refreshItemList()
     sb:draw()
 end
 
-function handleCharEv(ev)
+local function handleCharEv(ev)
     if ev[2] ~= "%" then -- don't let the user enter a "%" character because a single one breaks the find method
         sb:addToSearchTerm(ev[2])
         sb:draw()
     end
 end
 
-function handleKeyEv(ev)
+local function handleKeyEv(ev)
     if ev[2] == 341 then
         ctrlIsHeld = true
     end
@@ -134,10 +139,18 @@ function handleKeyEv(ev)
         elseif ev[2] == 257 then
             -- enter
             local sel = sb:getSelected()[1]
-            count, name = string.match(sel,"([0-9]+) +- ([^ ]+) +")
+            local count, name = string.match(sel,"([0-9]+) +- ([^ ]+) +")
             sb.win:setBorderColour(colours.lime)
             sb:draw()
-            rss:retrieve(name, outChest, math.min(count, 64))
+            local res = rss:retrieve(name, outChest, math.min(count, 64)):unwrap()[1]
+            res:handle(
+                function(retrieved)
+                    DBGMONPRINT("Retrieved: "..tostring(retrieved))
+                end,
+                function(err)
+                    DBGMONPRINT("Failed: "..err)
+                end
+            )
             sb.win:setBorderColour(colours.grey)
             refreshItemList()
         end
@@ -145,7 +158,7 @@ function handleKeyEv(ev)
     return false
 end
 
-function handleKeyUpEv(ev)
+local function handleKeyUpEv(ev)
     if ev[2] == 341 then
         ctrlIsHeld = false
     end

@@ -2,8 +2,25 @@
 -- as strings, a search value to look for, and a function to run when
 -- an entry is clicked on
 
-local AW = require("/CCStorage/Common/AdvancedWindowClass")
+local AW = require("/CCStorage.Common.AdvancedWindowClass")
 
+--- @class SearchBox
+--- @field win AdvancedWindow
+--- @field searchTerm string
+--- @field searchList table
+--- @field listOverride nil|string
+--- @field currentListLen number
+--- @field selectedEntry number
+--- @field x number
+--- @field y number
+--- @field w number
+--- @field h number
+--- @field bgCol ccTweaked.colors.color
+--- @field fgCol ccTweaked.colors.color
+--- @field borderCol ccTweaked.colors.color
+--- @field highlightCol ccTweaked.colors.color
+--- @field selectedCol ccTweaked.colors.color
+--- @field searchTermCol ccTweaked.colors.color
 local SearchBox = {}
 
 function SearchBox:draw()
@@ -76,6 +93,7 @@ function SearchBox:draw()
     end
 end
 
+--- @return nil|string
 function SearchBox:getSelected()
     local searchedList = self:filterSearchList(self.searchTerm)
     if self.selectedEntry then
@@ -101,6 +119,8 @@ function SearchBox:moveSelectedUp()
     self.selectedEntry = subbed
 end
 
+--- Move selectedPos back to a legal position if it has been
+--- forced elsewhere
 function SearchBox:rectifySelectedPos()
     -- set selected index to nil if there are no items listed
     if self.currentListLen == 0 then
@@ -119,10 +139,12 @@ function SearchBox:rectifySelectedPos()
     end
 end
 
+--- @param addition string
 function SearchBox:addToSearchTerm(addition)
     self.searchTerm = self.searchTerm .. addition
 end
 
+--- @param num number number of chars to remove
 function SearchBox:removeFromSearchTerm(num)
     local new = string.sub(self.searchTerm, 1, -1-num)
     self.searchTerm = new
@@ -140,14 +162,16 @@ function SearchBox:clearListOverride()
     self.listOverride = nil
 end
 
+--- @param pattern string pattern to search for
+--- @return table list list of entries that match the pattern
 function SearchBox:filterSearchList(pattern)
     local arrOut = {} -- in format {string, startindex, endindex}
     for k, v in pairs(self.searchList) do
-        startindex, endindex = v:find(pattern)
+        local startindex, endindex = v:find(pattern)
         if startindex ~= nil then
             arrOut[#arrOut+1] = {v, startindex, endindex}
         end
-    end 
+    end
     return arrOut
 end
 
@@ -158,6 +182,7 @@ function SearchBox:getCurrentSearchListLen()
     )
 end
 
+--- @param list table table of strings
 function SearchBox:setSearchList(list)
     self.searchList = list
 
@@ -168,10 +193,23 @@ local SearchBoxMetatable = {
     __index = SearchBox
 }
 
-function new(parent, x, y, w, h, bgCol, fgCol, borderCol, highlightCol, selectedCol, searchTermCol)
+--- @param parent ccTweaked.peripherals.Monitor|ccTweaked.term.Redirect
+--- @param x number
+--- @param y number
+--- @param w number
+--- @param h number
+--- @param bgCol ccTweaked.colors.color
+--- @param fgCol ccTweaked.colors.color
+--- @param borderCol ccTweaked.colors.color
+--- @param highlightCol ccTweaked.colors.color
+--- @param selectedCol ccTweaked.colors.color
+--- @param searchTermCol ccTweaked.colors.color
+--- @return table
+--- Create a new Search Box
+local function new(parent, x, y, w, h, bgCol, fgCol, borderCol, highlightCol, selectedCol, searchTermCol)
 
     local window = AW.new(parent, x, y, w, h, bgCol, fgCol, borderCol)
-    
+
     local sb = setmetatable(
         {
             win = window,
