@@ -17,6 +17,7 @@ mon.setTextScale(0.5)
 local mX, mY = mon.getSize()
 mon.clear()
 
+modem.closeAll()
 local rss = RSS.new(modem, 20, 21, true)
 
 local wm = WM.new(mon)
@@ -44,7 +45,7 @@ local function timerHandler(evIn)
         itemCounter:requestList()
     end
 
-    SortTimerID = os.startTimer(5)
+    SortTimerID = os.startTimer(1)
 
 end
 
@@ -63,7 +64,8 @@ local function modemMessageHandler(evIn)
     elseif decoded[2] == "detectAndRegisterItems" then
 
         mainButtonPanel:registerHandler(decoded)
-        SortTimerID = os.startTimer(5)
+        os.cancelTimer(SortTimerID)
+        SortTimerID = os.startTimer(0.1)
 
     elseif decoded[2] == "organisedList" then
 
