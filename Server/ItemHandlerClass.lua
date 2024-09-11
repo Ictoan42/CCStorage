@@ -28,6 +28,7 @@ function itemSorter:sortItem(slot, from, itemObj)
     --
     -- returns Result<bool> where bool encodes whether an item was moved
 
+    --TODO: This should be resilient to the system running out of space
     self.logger:d("ItemHandler executing method sortItem")
 
     local fromPeriphRes = Try(peripheral.wrap(from), "Peripheral '"..from.."' does not exist")
@@ -61,20 +62,13 @@ function itemSorter:sortItem(slot, from, itemObj)
     end
 end
 
-local todo = [[
-
-TODO:
-
-convert all the other stuff to use Results
-make sortItem resilient to the system running out of space
-
-]]
-
 --- @param from string
 --- @return Result
 --- Sort all items from the given chest into the system
 function itemSorter:sortAllFromChest(from)
     -- uses the stored sortingList to sort all items in the given chest into the stored chestArray
+
+    --TODO: nil check argument
 
     self.logger:d("ItemHandler executing method sortAllFromChest")
 
@@ -119,7 +113,7 @@ function itemSorter:sortAllFromChest(from)
     return Ok(not unregisteredFound) -- invert to align with system-wide concept of "false" meaning bad and "true" meaning good
 end
 
---- @return Result (list of items OR false)
+--- @return Result (list of items, empty if none found)
 --- Finds a list of items in the system that aren't currently
 --- registered and returns it
 function itemSorter:findUnregisteredItems()
@@ -161,11 +155,7 @@ function itemSorter:findUnregisteredItems()
         end
     end
 
-    if #arrOut == 0 then -- if we didn't find anything
-        return Ok(false)
-    else
-        return Ok(arrOut)
-    end
+    return Ok(arrOut)
 end
 
 --- @param dumpChest string
@@ -173,6 +163,8 @@ end
 --- Moves any unregistered items into dumpChest
 function itemSorter:cleanUnregisteredItems(dumpChest)
     -- moves all unregistered items to the given output chest
+
+    --TODO: nil check dumpChest
 
     self.logger:d("ItemHandler executing method cleanUnregisteredItems")
 
@@ -202,11 +194,11 @@ function itemSorter:cleanUnregisteredItems(dumpChest)
         dumpChestPeriph.pullItems(v[1], v[2])
     end
 
-    return Ok(nil)
+    return Ok(true)
 end
 
 --- @param itemName string
---- @return Result
+--- @return Result (list of items, maybe empty)
 --- Finds the specified item in the system.
 --- Return format:
 --- {
@@ -260,11 +252,7 @@ function itemSorter:findItems(itemName)
         end
     end
 
-    if #arrOut == 0 then -- if we didn't find anything
-        return Ok(false)
-    else
-        return Ok(arrOut)
-    end
+    return Ok(arrOut)
 end
 
 --- @param itemName string
@@ -276,6 +264,8 @@ end
 --- to 'to'. 'count' is 64 by default.
 function itemSorter:retrieveItems(itemName, to, count, toSlot)
     -- retrieves the given item from the chestArray and places it in the given destination chest
+
+    --TODO: nil check arguments
 
     self.logger:d("ItemHandler executing method retrieveItems")
 

@@ -133,6 +133,7 @@ function sortingList:addDest(itemName, chestName)
     -- add a destination to local memory and disk
     -- saved to disk by appending in the standard format to the storageFile
 
+    --TODO: nil check the arguments
     self.logger:d("SortingList executing method addDest")
 
     if self.dests[itemName] ~= nil then
@@ -158,6 +159,8 @@ end
 --- Unregisters the given item from the system
 function sortingList:removeDest(itemName)
     -- remove the specified destination from local memory and disk storage
+
+    --TODO: nil check itemName
 
     self.logger:d("SortingList executing method removeDest")
 
