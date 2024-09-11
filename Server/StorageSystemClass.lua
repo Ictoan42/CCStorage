@@ -222,6 +222,10 @@ local function new(confFilePath)
             enableColour
         )
 
+        if logger == nil then
+            error("Could not instantiate logger")
+        end
+
         logger:i("Logger initialised")
         logger:i("Logger file: " .. cfg.logFilePath)
         logger:i("Logger term: " .. cfg.logMonName)
