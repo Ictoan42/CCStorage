@@ -35,21 +35,29 @@ function MainButtonPanel:sort()
 
 end
 
+--- @param evIn table modem message
+--- @return boolean unregisteredFound whether any unregistered items were found in the input chest
 function MainButtonPanel:sortHandler(evIn)
 
-    if evIn[5][1] == true then
+    local prp = require("cc.pretty").pretty_print
+    prp(evIn)
 
-        self.sw:setMessage({"Status: Idle"})
-        self.sw:render()
-        return
-
+    --- @type Result
+    local res = evIn[1]
+    if res:is_ok() then
+        if res:unwrap() then
+            self.sw:setMessage({"Status: Idle"})
+            self.sw:render()
+            return false
+        else
+            self.sw:setMessage({"Unregistered items found in input", "Please manually sort the", "remaining items into the chests", "Then press 'Register'"})
+            self.sw:flash(colours.red, colours.black)
+            return true
+        end
     else
-
-        self.sw:setMessage({"Unregistered items found in input", "Please manually sort the", "remaining items into the chests", "Then press 'Register'"})
+        self.sw:setMessage({"Failed to sort items due to error:", res:unwrap_err()})
         self.sw:flash(colours.red, colours.black)
-
-        return true
-
+        return false
     end
 
 end

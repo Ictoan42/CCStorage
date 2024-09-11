@@ -30,7 +30,7 @@ end
 function ItemCountWatcher:handleListResponse(evIn)
 
     --- @type Result
-    local res = evIn[5][1]
+    local res = evIn[1]
 
     res:handle(
         function(val)
