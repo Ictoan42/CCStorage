@@ -133,7 +133,7 @@ local function Ok(val)
     local obj = {}
     obj["status"] = "ok"
     obj["val"] = val
-    
+
     return setmetatable(obj, ResultMetatable)
 end
 
