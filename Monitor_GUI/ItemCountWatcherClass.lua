@@ -16,7 +16,7 @@ local ItemCountWatcherMetatable = {
 
 function ItemCountWatcher:requestList()
 
-    self.rssObj:organisedList()
+    self.rssObj:organisedList(true)
 
 end
 
@@ -39,19 +39,26 @@ end
 
 function ItemCountWatcher:draw(itemsList)
 
-    -- itemsList is an argument to pass in a premade list from rss:organisedList()
+    -- itemsList is an argument to pass in a premade list from rss:organisedList(true)
 
     local items = itemsList
 
-    -- transform into array where entries are in format {count, name}
+    -- transform into array where entries are in format {count, name, regStatus}
     local sortedList = {}
     local totalItemCount = 0
     for k, v in pairs(items) do
 
-        local formToStore = {v, k}
+        if type(v) ~= "table" then
+            print("beans")
+            -- organisedList was called by a different client without requesting
+            -- reg info, we should ignore this call
+            return
+        end
+
+        local formToStore = {v[1], k, v["regStatus"]}
 
         table.insert(sortedList, formToStore)
-        totalItemCount = totalItemCount + v
+        totalItemCount = totalItemCount + v[1]
     end
 
     self.win:clear(true)
@@ -98,7 +105,14 @@ function ItemCountWatcher:draw(itemsList)
             n2 = n2 .. ".."
         end
 
-        self.win:write(c .. " - " .. n2)
+        if sortedList[y][3] == false then
+            local oldCol = self.win:getTextColour()
+            self.win:setTextColour(colours.red)
+            self.win:write(c .. " - " .. n2)
+            self.win:setTextColour(oldCol)
+        else
+            self.win:write(c .. " - " .. n2)
+        end
     end
 
 end

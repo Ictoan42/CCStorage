@@ -64,11 +64,14 @@ function StorageSystem:list(liteMode)
     return self.chestArray:list(liteMode)
 end
 
+--- @param getRegistration? boolean whether to include item registration data
 --- @return Result
 --- Returns a list of every item in the system. Format is
---- a table where t["itemID"] = itemCount
-function StorageSystem:organisedList()
-    return self.chestArray:sortedList()
+--- a table where t.itemID = { itemCount, ["reg"] = "destination"|nil }
+--- OR if getRegistration is false or nil, then the return table
+--- is in the format t.itemID = itemCount
+function StorageSystem:organisedList(getRegistration)
+    return self.chestArray:sortedList(getRegistration)
 end
 
 --- @param itemID string
@@ -238,6 +241,28 @@ local function new(confFilePath)
     end
 
     ---------------
+    -- INIT SORTINGLIST
+    ---------------
+
+    -- if sorting list storage file does not exist, create a blank on
+    if not fs.exists(cfg.sortingListFilePath) then
+        --- @type ccTweaked.fs.WriteHandle
+        local f = fs.open(cfg.sortingListFilePath, "w")
+        f.write("\n")
+        f.close()
+    end
+
+    local sortingList
+    do
+        sortingList = SortingList.new(
+            cfg.sortingListFilePath,
+            cfg.sortingListBackupFilePath,
+            cfg.sortingListBrokenFilePath,
+            logger
+        ):unwrap(logger)
+    end
+
+    ---------------
     -- INIT CHESTARRAY
     ---------------
     local chestArray
@@ -266,31 +291,10 @@ local function new(confFilePath)
 
         chestArray = ChestArray.new(
             chests,
+            sortingList,
             logger
         ):unwrap(logger)
 
-    end
-
-    ---------------
-    -- INIT SORTINGLIST
-    ---------------
-
-    -- if sorting list storage file does not exist, create a blank on
-    if not fs.exists(cfg.sortingListFilePath) then
-        --- @type ccTweaked.fs.WriteHandle
-        local f = fs.open(cfg.sortingListFilePath, "w")
-        f.write("\n")
-        f.close()
-    end
-
-    local sortingList
-    do
-        sortingList = SortingList.new(
-            cfg.sortingListFilePath,
-            cfg.sortingListBackupFilePath,
-            cfg.sortingListBrokenFilePath,
-            logger
-        ):unwrap(logger)
     end
 
     ---------------

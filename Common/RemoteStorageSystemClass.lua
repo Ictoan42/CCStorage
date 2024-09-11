@@ -46,11 +46,14 @@ function RemoteStorageSystem:list(liteMode)
     return self:sendReq({"list", liteMode})
 end
 
+--- @param getRegistration? boolean whether to include item registration data
 --- @return Result
 --- Returns a list of every item in the system. Format is
---- a table where t["itemID"] = itemCount
-function RemoteStorageSystem:organisedList()
-    return self:sendReq({"organisedList"})
+--- a table where t.itemID = { itemCount, ["reg"] = "destination"|nil }
+--- OR if getRegistration is false or nil, then the return table
+--- is in the format t.itemID = itemCount
+function RemoteStorageSystem:organisedList(getRegistration)
+    return self:sendReq({"organisedList", getRegistration})
 end
 
 --- @param itemID string
