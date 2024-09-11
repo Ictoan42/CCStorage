@@ -319,11 +319,13 @@ function itemSorter:retrieveItems(itemName, to, count, toSlot)
     --its registered chest
 
     -- iterate over every slot in the chest
+    local haveFoundItem = false
     for i=1, peripheral.call(chestName, "size") do
 
         if itemsInChest[i] ~= nil then -- if this slot contains an item
             if itemsInChest[i]["name"] == itemName then
                 -- we found the item
+                haveFoundItem = true
                 if itemsInChest[i]["count"] >= count then
                     -- there is enough of this item in the first stack to do the move in one go
                     toPeriph.pullItems(
@@ -354,7 +356,12 @@ function itemSorter:retrieveItems(itemName, to, count, toSlot)
         end
     end
 
-    return Ok(true)
+    if not haveFoundItem then
+        self.logger:e("Item '"..itemName.."' is in the system but not the right chest!")
+        return Ok(false)
+    end
+
+    return Err("Supposed to be unreachable?")
 end
 
 local itemSorterMetatable = {
