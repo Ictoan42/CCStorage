@@ -140,17 +140,26 @@ local function handleKeyEv(ev)
             -- enter
             local sel = sb:getSelected()[1]
             local count, name = string.match(sel,"([0-9]+) +- ([^ ]+) +")
-            sb.win:setBorderColour(colours.lime)
+            sb.win:setBorderColour(colours.white)
             sb:draw()
             local res = rss:retrieve(name, outChest, math.min(count, 64)):unwrap()[1]
             res:handle(
                 function(retrieved)
+                    if retrieved then
+                        sb.win:setBorderColour(colours.lime)
+                    else
+                        sb.win:setBorderColour(colours.red)
+                    end
+                    sb:draw()
                     DBGMONPRINT("Retrieved: "..tostring(retrieved))
                 end,
                 function(err)
+                    sb.win:setBorderColour(colours.red)
+                    sb:draw()
                     DBGMONPRINT("Failed: "..err)
                 end
             )
+            sleep(0.2)
             sb.win:setBorderColour(colours.grey)
             refreshItemList()
         end
