@@ -1,5 +1,10 @@
 -- window that contains the "sort" and "register" buttons
 
+--- @class MainButtonPanel
+--- @field win AdvancedWindow
+--- @field rssObj RemoteStorageSystem
+--- @field sw StatusWindow
+--- @field inputChestID string
 local MainButtonPanel = {}
 
 local MainButtonPanelMetatable = {
@@ -63,6 +68,19 @@ function MainButtonPanel:registerHandler(evIn)
 
 end
 
+--- @param winManObj WindowManager
+--- @param rssObj RemoteStorageSystem
+--- @param name string
+--- @param x number
+--- @param y number
+--- @param w number
+--- @param h number
+--- @param bgcol ccTweaked.colors.color
+--- @param fgcol ccTweaked.colors.color
+--- @param bordercol ccTweaked.colors.color
+--- @param statusWindowObj StatusWindow
+--- @param inputChestID string
+--- @return MainButtonPanel|boolean
 local function new(winManObj, rssObj, name, x, y, w, h, bgcol, fgcol, bordercol, statusWindowObj, inputChestID)
 
     local mbp = {}

@@ -1,7 +1,20 @@
 Button = require("/CCStorage.Common.ButtonClass")
 
+--- @class AdvancedWindow
+--- @field x number
+--- @field y number
+--- @field width number
+--- @field height number
+--- @field backgroundColour ccTweaked.colors.color
+--- @field foregroundColour ccTweaked.colors.color
+--- @field borderColour ccTweaked.colors.color
+--- @field outerWin ccTweaked.Window
+--- @field innerWin ccTweaked.Window
+--- @field buttons table
 local AdvancedWindow = {}
 
+--- @param text string
+--- Prints 'text' on the window
 function AdvancedWindow:print(text)
 
     term.redirect(self.innerWin)
@@ -14,6 +27,17 @@ function AdvancedWindow:print(text)
 
 end
 
+--- @param id string id to refer to the button as
+--- @param label string text to write on the button
+--- @param x number
+--- @param y number
+--- @param w number
+--- @param h number
+--- @param idleColour ccTweaked.colors.color
+--- @param activatedColour ccTweaked.colors.color
+--- @param callback function function to run when the button is pressed
+--- @return boolean
+--- Create a new button
 function AdvancedWindow:addButton(id, label, x, y, w, h, idleColour, activatedColour, callback)
     -- creates a button
     -- args:
@@ -46,6 +70,8 @@ function AdvancedWindow:drawButtons()
 
 end
 
+--- @param id string
+--- @return any the return value of the button's callback
 function AdvancedWindow:activateButtonByID(id)
     -- actives the button with the given id
     if self.buttons[id] == nil then -- this button doesn't exist
@@ -57,6 +83,9 @@ function AdvancedWindow:activateButtonByID(id)
     end
 end
 
+--- @param x number
+--- @param y number
+--- @return boolean pressed whether a button was pressed
 function AdvancedWindow:activateButtonByCoord(x, y)
 
     for k, v in pairs(self.buttons) do
@@ -69,6 +98,7 @@ function AdvancedWindow:activateButtonByCoord(x, y)
     return false
 end
 
+--- @param borderToo boolean whether to redraw the border aswell
 function AdvancedWindow:clear(borderToo)
 
     self.innerWin.setBackgroundColour(self.backgroundColour)
@@ -80,6 +110,8 @@ function AdvancedWindow:clear(borderToo)
     end
 end
 
+--- @param x number
+--- @param y number
 function AdvancedWindow:setCursorPos(x, y)
     return self.innerWin.setCursorPos(x, y)
 end
@@ -142,36 +174,42 @@ function AdvancedWindow:drawBorder()
 
 end
 
+--- @param col ccTweaked.colors.color
 function AdvancedWindow:setBackgroundColour(col)
 
     self.backgroundColour = col
 
 end
 
+--- @param col ccTweaked.colors.color
 function AdvancedWindow:setTextColour(col)
 
     self.foregroundColour = col
 
 end
 
+--- @param col ccTweaked.colors.color
 function AdvancedWindow:setBorderColour(col)
 
     self.borderColour = col
 
 end
 
+--- @return ccTweaked.colors.color
 function AdvancedWindow:getBackgroundColour(col)
 
     return self.backgroundColour
 
 end
 
+--- @return ccTweaked.colors.color
 function AdvancedWindow:getTextColour(col)
 
     return self.foregroundColour
 
 end
 
+--- @return ccTweaked.colors.color
 function AdvancedWindow:getBorderColour(col)
 
     return self.borderColour
@@ -182,6 +220,16 @@ local AdvancedWindowMetatable = {
     __index = AdvancedWindow
 }
 
+--- @param parent ccTweaked.peripherals.Monitor|ccTweaked.term.Redirect
+--- @param x number
+--- @param y number
+--- @param w number
+--- @param h number
+--- @param bgcol ccTweaked.colors.color
+--- @param fgcol ccTweaked.colors.color
+--- @param bordercol ccTweaked.colors.color
+--- @return AdvancedWindow
+--- Create a new Advanced Window
 local function new(parent, x, y, w, h, bgcol, fgcol, bordercol)
 
     local outerWin = window.create(

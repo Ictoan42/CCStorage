@@ -1,8 +1,22 @@
 AdvancedWindow = require("/CCStorage.Common.AdvancedWindowClass")
 Button = require("/CCStorage.Common.ButtonClass")
 
+--- @class WindowManager
+--- @field term ccTweaked.peripherals.Monitor|ccTweaked.term.Redirect
+--- @field shuttingDown boolean
+--- @field windows table
+--- @field listener nil
 local WindowManager = {}
 
+--- @param name string
+--- @param x number
+--- @param y number
+--- @param w number
+--- @param h number
+--- @param bgcol ccTweaked.colors.color
+--- @param fgcol ccTweaked.colors.color
+--- @param bordercol ccTweaked.colors.color
+--- @return AdvancedWindow|boolean
 function WindowManager:newWindow(name, x, y, w, h, bgcol, fgcol, bordercol)
 
     -- check if it overlaps with any existing window
@@ -38,6 +52,11 @@ function WindowManager:removeWindow(name)
 
 end
 
+--- @param evName string
+--- @param side string
+--- @param x number
+--- @param y number
+--- @return boolean
 function WindowManager:handleMonitorTouch(evName, side, x, y)
 
     -- find which window this touch was on
@@ -73,6 +92,9 @@ local WindowManagerMetatable = {
     __index = WindowManager
 }
 
+--- @param term ccTweaked.peripherals.Monitor|ccTweaked.term.Redirect
+--- @return WindowManager
+--- Create a new window manager on the specified terminal object
 local function new(term)
 
     local o = setmetatable(

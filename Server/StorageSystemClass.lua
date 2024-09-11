@@ -185,6 +185,7 @@ local function new(confFilePath)
         local enableColour
 
         if cfg.logFilePath ~= "" then -- if a log file has been specified
+            --- @type ccTweaked.fs.WriteHandle
             logFile = fs.open(cfg.logFilePath, "w")
             print("Log file is " .. cfg.logFilePath)
         else
@@ -198,6 +199,7 @@ local function new(confFilePath)
             peripheral.call(cfg.logMonName, "setTextScale", 0.5)
             peripheral.call(cfg.logMonName, "clear")
             peripheral.call(cfg.logMonName, "setCursorPos", 1, 1)
+            --- @type ccTweaked.peripherals.Monitor
             logTerm = peripheral.wrap(cfg.logMonName)
             print("Log monitor is " .. cfg.logMonName)
         else
@@ -239,6 +241,7 @@ local function new(confFilePath)
     ---------------
     local chestArray
     do
+        --- @type ccTweaked.peripherals.Modem
         local modem = peripheral.find("modem")
         local networkNames = modem.getNamesRemote()
 
@@ -273,6 +276,7 @@ local function new(confFilePath)
 
     -- if sorting list storage file does not exist, create a blank on
     if not fs.exists(cfg.sortingListFilePath) then
+        --- @type ccTweaked.fs.WriteHandle
         local f = fs.open(cfg.sortingListFilePath, "w")
         f.write("\n")
         f.close()

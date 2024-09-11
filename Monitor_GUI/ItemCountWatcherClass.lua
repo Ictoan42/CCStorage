@@ -4,6 +4,10 @@ local pr = require("cc.pretty")
 local prp = pr.pretty_print
 local ccs = require("cc.strings")
 
+--- @class ItemCountWatcher
+--- @field win AdvancedWindow
+--- @field rssObj RemoteStorageSystem
+--- @field sw StatusWindow
 local ItemCountWatcher = {}
 
 local ItemCountWatcherMetatable = {
@@ -22,6 +26,7 @@ function ItemCountWatcher:requestList()
 
 end
 
+--- @param evIn table a modem message
 function ItemCountWatcher:handleListResponse(evIn)
 
     --- @type Result
@@ -104,6 +109,18 @@ function ItemCountWatcher:draw(itemsList)
 
 end
 
+--- @param winManObj WindowManager
+--- @param rssObj RemoteStorageSystem
+--- @param name string
+--- @param x number
+--- @param y number
+--- @param w number
+--- @param h number
+--- @param bgcol ccTweaked.colors.color
+--- @param fgcol ccTweaked.colors.color
+--- @param bordercol ccTweaked.colors.color
+--- @param statusWindowObj StatusWindow
+--- @return ItemCountWatcher|boolean
 local function new(winManObj, rssObj, name, x, y, w, h, bgcol, fgcol, bordercol, statusWindowObj)
     -- winManObj is the window manager object to draw onto
     -- rssObj is the remote storage system object to watch the size of

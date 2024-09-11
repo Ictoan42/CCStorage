@@ -1,11 +1,15 @@
 -- window for communicating with the user
 
+--- @class StatusWindow
+--- @field win AdvancedWindow
+--- @field rssObj RemoteStorageSystem
 local StatusWindow = {}
 
 local StatusWindowMetatable = {
     __index = StatusWindow
 }
 
+--- @param message table array of strings, each is a line
 function StatusWindow:setMessage(message)
 
     -- message should be an array of string
@@ -15,6 +19,8 @@ function StatusWindow:setMessage(message)
 
 end
 
+--- @param bgcol ccTweaked.colors.color
+--- @param tcol ccTweaked.colors.color
 function StatusWindow:flash(bgcol, tcol)
     -- flash the entire window to the given colours
     -- render through any stored message while we're at it
@@ -68,6 +74,17 @@ function StatusWindow:render()
 
 end
 
+--- @param winManObj WindowManager
+--- @param rssObj RemoteStorageSystem
+--- @param name string the name of the window
+--- @param x number
+--- @param y number
+--- @param w number
+--- @param h number
+--- @param bgcol ccTweaked.colors.color
+--- @param fgcol ccTweaked.colors.color
+--- @param bordercol ccTweaked.colors.color
+--- @return StatusWindow|boolean
 local function new(winManObj, rssObj, name, x, y, w, h, bgcol, fgcol, bordercol)
 
     local sw = {}
