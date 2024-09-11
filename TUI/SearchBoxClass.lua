@@ -29,10 +29,10 @@ function SearchBox:draw()
     local windowH = self.h - 2
     self.win:setCursorPos(1, 1)
     self.win:setBackgroundColour(self.searchTermCol)
-    self.win:print(self.searchTerm) -- print current search term
+    self.win:write(self.searchTerm) -- print current search term
     self.win:setCursorPos(1, 2)
     self.win:setBackgroundColour(self.bgCol)
-    self.win:print( -- seperator
+    self.win:write( -- seperator
         string.rep("-", windowW)
     )
 

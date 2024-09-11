@@ -68,7 +68,7 @@ function StatusWindow:render()
 
         self.win:setCursorPos(cX, topLineY + (k - 1))
 
-        self.win:print(v)
+        self.win:write(v)
 
     end
 

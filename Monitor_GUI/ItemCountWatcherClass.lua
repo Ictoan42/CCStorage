@@ -63,7 +63,7 @@ function ItemCountWatcher:draw(itemsList)
     self.win:clear(true)
 
     self.win:setCursorPos(1, 1)
-    self.win:print(
+    self.win:write(
         "Total: " .. totalItemCount .. " items"
     )
 
@@ -104,7 +104,7 @@ function ItemCountWatcher:draw(itemsList)
             n2 = n2 .. ".."
         end
 
-        self.win:print(c .. " - " .. n2)
+        self.win:write(c .. " - " .. n2)
     end
 
 end

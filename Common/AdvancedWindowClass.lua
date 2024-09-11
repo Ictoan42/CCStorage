@@ -1,4 +1,5 @@
-Button = require("/CCStorage.Common.ButtonClass")
+local Button = require("/CCStorage.Common.ButtonClass")
+local STR = require("cc.strings")
 
 --- @class AdvancedWindow
 --- @field x number
@@ -14,27 +15,17 @@ Button = require("/CCStorage.Common.ButtonClass")
 local AdvancedWindow = {}
 
 --- @param text string
---- Prints 'text' on the window
-function AdvancedWindow:print(text)
-
-    term.redirect(self.innerWin)
-    self.innerWin.setBackgroundColour(self.backgroundColour)
-    self.innerWin.setTextColour(self.foregroundColour)
-    print(text)
-    term.redirect(term.native())
-
-    self:drawButtons()
-
-end
-
---- @param text string
+--- Writes 'text' on the window
 function AdvancedWindow:write(text)
-    term.redirect(self.innerWin)
+
+    local termX, termY = self.innerWin:getSize()
+    local cursorX, cursorY = self.innerWin.getCursorPos()
     self.innerWin.setBackgroundColour(self.backgroundColour)
     self.innerWin.setTextColour(self.foregroundColour)
     self.innerWin.write(text)
-    term.redirect(term.native())
+
     self:drawButtons()
+
 end
 
 --- @param id string id to refer to the button as
