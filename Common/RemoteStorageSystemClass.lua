@@ -175,4 +175,4 @@ local function new(modem, port, returnPort, isNonBlocking)
 
 end
 
-return { new = new }
+return { new = new, DecodeResponse = decodeResponse }
