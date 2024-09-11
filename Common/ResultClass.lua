@@ -91,6 +91,7 @@ function Result:is_ok()
         return false
     else
         self:brokenStateError()
+        return false -- unreachable but still here to make lua_ls happy
     end
 end
 
@@ -103,6 +104,7 @@ function Result:is_err()
         return false
     else
         self:brokenStateError()
+        return false -- unreachable but still here to make lua_ls happy
     end
 end
 
