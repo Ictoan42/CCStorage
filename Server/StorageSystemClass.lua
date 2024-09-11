@@ -84,7 +84,7 @@ function StorageSystem:findItems(itemID)
 end
 
 --- @param inputChestID string
---- @return Result
+--- @return Result unregisteredFound whether or not any unregistered items were found in the input chest
 --- Sort all items from the given chest into the system
 function StorageSystem:sortFromInput(inputChestID)
     return self.itemHandler:sortAllFromChest(inputChestID)

@@ -52,11 +52,9 @@ function itemSorter:sortItem(slot, from, itemObj)
     local dest = self.sortingList:getDest(itemID)
 
     if dest == nil then
-        self.logger:d("ItemHandler:sortItem returning false: item has no stored dest")
         -- if the given item doesn't have a stored dest
         return Ok(false)
     else
-        self.logger:d("ItemHandler:sortItem finished successfully")
         if not peripheral.isPresent(dest) then
             self.logger:e("sortItem failed because peripheral '"..dest.."' does not exist")
             return Err("Peripheral '"..dest.."' does not exist")
@@ -67,7 +65,7 @@ function itemSorter:sortItem(slot, from, itemObj)
 end
 
 --- @param from string
---- @return Result
+--- @return Result unregisteredFound whether or not any unregistered items were found in the input chest
 --- Sort all items from the given chest into the system
 function itemSorter:sortAllFromChest(from)
     -- uses the stored sortingList to sort all items in the given chest into the stored chestArray

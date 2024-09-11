@@ -14,6 +14,7 @@ local function decodeResponse(response)
     elseif response[2] == nil then
         return Err("Input contains no method name")
     end
+
     local outTab = {}
     local convertRes = Coerce(response[1])
     if convertRes:is_ok() then
@@ -63,7 +64,7 @@ function RemoteStorageSystem:findItems(itemID)
 end
 
 --- @param inputChestID string
---- @return Result
+--- @return Result unregisteredFound whether or not any unregistered items were found in the input chest
 --- Sort all items from the given chest into the system
 function RemoteStorageSystem:sortFromInput(inputChestID)
     return self:sendReq({"sortFromInput", inputChestID})
