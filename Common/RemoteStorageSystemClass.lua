@@ -9,6 +9,11 @@ local Ok, Err, Try, Coerce = R.Ok, R.Err, R.Try, R.Coerce
 --- @return Result (Result<{Result, "methodName"}>)
 --- Parses a table of format { RetValTable, "methodName"} into { Result, "methodName"}
 local function decodeResponse(response)
+    if response == nil then
+        return Err("Argument is nil")
+    elseif response[2] == nil then
+        return Err("Input contains no method name")
+    end
     local outTab = {}
     local convertRes = Coerce(response[1])
     if convertRes:is_ok() then
