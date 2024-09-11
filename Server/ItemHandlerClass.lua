@@ -269,7 +269,7 @@ end
 --- @param to string
 --- @param count? number
 --- @param toSlot? number
---- @return Result
+--- @return Result returned Result<bool> if any items were retrieved
 --- Finds the desired item, and moves 'count' of that item
 --- to 'to'. 'count' is 64 by default.
 function itemSorter:retrieveItems(itemName, to, count, toSlot)
@@ -315,6 +315,9 @@ function itemSorter:retrieveItems(itemName, to, count, toSlot)
         return slres
     end
 
+    --TODO: this currently fails silently if the item is in the system, but not in
+    --its registered chest
+
     -- iterate over every slot in the chest
     for i=1, peripheral.call(chestName, "size") do
 
@@ -332,7 +335,6 @@ function itemSorter:retrieveItems(itemName, to, count, toSlot)
                     return Ok(true)
                 else
                     -- move what is there, then recur this function with a reduced desired count
-                    print("Moving what's there")
                     local numberOfItemsMoved = toPeriph.pullItems(
                         chestName,
                         i,

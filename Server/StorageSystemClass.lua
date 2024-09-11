@@ -94,7 +94,7 @@ end
 --- @param outputChestID string
 --- @param count? number
 --- @param toSlot? number
---- @return Result
+--- @return Result returned Result<bool> if any items were retrieved
 --- Finds the desired item, and moves 'count' of that item
 --- to 'to'. 'count' is 64 by default.
 function StorageSystem:retrieve(itemID, outputChestID, count, toSlot)
