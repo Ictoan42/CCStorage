@@ -155,10 +155,11 @@ function StorageSystem:cleanUnregisteredItems(dumpChest)
     return self.itemHandler:cleanUnregisteredItems(dumpChest)
 end
 
---- @return ConfigFile
+--- @return Result cfg the ConfigFile object
 --- Get the system's configuration
 function StorageSystem:getConfig()
-    return self.confFile
+    self.logger:d("Running GetConfig")
+    return Ok(self.confFile)
 end
 
 local StorageSystemMetatable = {
