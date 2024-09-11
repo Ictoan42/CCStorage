@@ -40,6 +40,8 @@ end
 
 local function modemMessageHandler(evIn)
 
+    local decoded = RSS.DecodeResponse(evIn[5])
+
     if evIn[5][2] == "sortFromInput" then
 
         if mainButtonPanel:sortHandler(evIn) then

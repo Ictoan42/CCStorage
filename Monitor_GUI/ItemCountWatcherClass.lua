@@ -24,7 +24,17 @@ end
 
 function ItemCountWatcher:handleListResponse(evIn)
 
-    self:draw(evIn[5][1])
+    --- @type Result
+    local res = evIn[5][1]
+
+    res:handle(
+        function(val)
+            self:draw(val)
+        end,
+        function(err)
+            print("Failed to parse response to list request: "..err)
+        end
+    )
 
 end
 
