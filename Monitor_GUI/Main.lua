@@ -36,6 +36,7 @@ local itemCounter = ICW.new(wm, rss, "itemCountWatcher", 2, 13, mX - 25, mY-13, 
 if type(itemCounter) == "boolean" then return end
 
 local SortTimerID = 0
+local shouldSkipList
 
 local function timerHandler(evIn)
 
@@ -70,7 +71,6 @@ local function modemMessageHandler(evIn)
 
     elseif decoded[2] == "cleanUnregisteredItems" then
 
-        prp(decoded)
         mainButtonPanel:cleanHandler(decoded)
 
     end
@@ -95,7 +95,7 @@ while true do
 
     elseif mev[1] == "modem_message" then
 
-        modemMessageHandler(mev, SortTimerID)
+        modemMessageHandler(mev)
 
     end
 
