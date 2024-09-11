@@ -27,6 +27,16 @@ function AdvancedWindow:print(text)
 
 end
 
+--- @param text string
+function AdvancedWindow:write(text)
+    term.redirect(self.innerWin)
+    self.innerWin.setBackgroundColour(self.backgroundColour)
+    self.innerWin.setTextColour(self.foregroundColour)
+    self.innerWin.write(text)
+    term.redirect(term.native())
+    self:drawButtons()
+end
+
 --- @param id string id to refer to the button as
 --- @param label string text to write on the button
 --- @param x number
