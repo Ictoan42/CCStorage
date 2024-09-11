@@ -87,7 +87,7 @@ end
 
 --- @return Result
 --- Returns a list of every item in the system. Format is
---- a table where t["itemID"] = itemCount
+--- a table where t\["itemID"\] = itemCount
 function chestArray:sortedList()
     -- takes the output of :list() and organises it
 

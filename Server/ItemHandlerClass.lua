@@ -68,7 +68,9 @@ end
 function itemSorter:sortAllFromChest(from)
     -- uses the stored sortingList to sort all items in the given chest into the stored chestArray
 
-    --TODO: nil check argument
+    if type(from) ~= "string" then
+        return Err("Source peripheral ID must be a string")
+    end
 
     self.logger:d("ItemHandler executing method sortAllFromChest")
 
@@ -164,7 +166,9 @@ end
 function itemSorter:cleanUnregisteredItems(dumpChest)
     -- moves all unregistered items to the given output chest
 
-    --TODO: nil check dumpChest
+    if type(dumpChest) ~= "string" then
+        return Err("Output chest ID must be a string")
+    end
 
     self.logger:d("ItemHandler executing method cleanUnregisteredItems")
 
@@ -220,6 +224,10 @@ function itemSorter:findItems(itemName)
 
     self.logger:d("ItemHandler executing method findItems")
 
+    if type(itemName) ~= "string" then
+        return Err("Item ID must be a string")
+    end
+
     local bigList
     local res = self.chestArray:list()
     if res:is_ok() then
@@ -265,7 +273,11 @@ end
 function itemSorter:retrieveItems(itemName, to, count, toSlot)
     -- retrieves the given item from the chestArray and places it in the given destination chest
 
-    --TODO: nil check arguments
+    if type(itemName) ~= "string" then
+        return Err("Item ID must be a string")
+    elseif type(to) ~= "string" then
+        return Err("Destination peripheral ID must be a string")
+    end
 
     self.logger:d("ItemHandler executing method retrieveItems")
 
@@ -291,9 +303,14 @@ function itemSorter:retrieveItems(itemName, to, count, toSlot)
     local itemsInChest = peripheral.call(chestName, "list")
 
     -- does the chest array contain at least {count} of the item
-    if count > self.chestArray:sortedList()[itemName] then -- if we do not have enough
-        self.logger:d("Cannot retrieve "..count.." of item '"..itemName.."'; not enough in storage")
-        return Ok(false)
+    local slres = self.chestArray:sortedList()
+    if slres:is_ok() then
+        if count > slres:unwrap(self.logger)[itemName] then -- if we do not have enough
+            self.logger:d("Cannot retrieve "..count.." of item '"..itemName.."'; not enough in storage")
+            return Ok(false)
+        end
+    else
+        return slres
     end
 
     -- iterate over every slot in the chest

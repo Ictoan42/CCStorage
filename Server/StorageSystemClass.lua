@@ -10,6 +10,10 @@ local pr = require("cc.pretty")
 local prp = pr.pretty_print
 Ok, Err, Try = Result.Ok, Result.Err, Result.Try
 
+--TODO:
+--add function to find how much space the system has left for any single item
+--add function to find how much space the system has left total
+
 --- @class StorageSystem
 --- @field logger Logger
 --- @field confFile ConfigFile

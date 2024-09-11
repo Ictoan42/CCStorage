@@ -133,7 +133,12 @@ function sortingList:addDest(itemName, chestName)
     -- add a destination to local memory and disk
     -- saved to disk by appending in the standard format to the storageFile
 
-    --TODO: nil check the arguments
+    if type(itemName) ~= "string" then
+        return Err("Item ID must be a string")
+    elseif type(chestName) ~= "string" then
+        return Err("Storage block ID must be a string")
+    end
+
     self.logger:d("SortingList executing method addDest")
 
     if self.dests[itemName] ~= nil then
@@ -160,7 +165,9 @@ end
 function sortingList:removeDest(itemName)
     -- remove the specified destination from local memory and disk storage
 
-    --TODO: nil check itemName
+    if type(itemName) ~= "string" then
+        return Err("Item ID must be a string")
+    end
 
     self.logger:d("SortingList executing method removeDest")
 
