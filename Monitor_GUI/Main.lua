@@ -1,8 +1,8 @@
-RSS = require("/CCStorage/Common/RemoteStorageSystemClass")
-WM = require("/CCStorage/Common/WindowManagerClass")
-ICW = require("/CCStorage/Monitor_GUI/ItemCountWatcherClass")
-MBP = require("/CCStorage/Monitor_GUI/MainButtonPanelClass")
-SW = require("/CCStorage/Monitor_GUI/StatusWindowClass")
+RSS = require("/CCStorage.Common.RemoteStorageSystemClass")
+WM = require("/CCStorage.Common.WindowManagerClass")
+ICW = require("/CCStorage.Monitor_GUI.ItemCountWatcherClass")
+MBP = require("/CCStorage.Monitor_GUI.MainButtonPanelClass")
+SW = require("/CCStorage.Monitor_GUI.StatusWindowClass")
 
 local modem = peripheral.find("modem")
 local mon = peripheral.wrap("left")
