@@ -26,7 +26,7 @@ function Button:draw(isActivated, window)
     local oldX, oldY = t.getCursorPos()
 
     t.setBackgroundColour(colToDraw)
-    for y = self.y, self.y + self.h do
+    for y = self.y, self.y + (self.h-1) do
         t.setCursorPos(self.x, y)
         t.write(string.rep(" ", self.w))
     end
