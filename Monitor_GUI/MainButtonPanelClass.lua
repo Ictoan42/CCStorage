@@ -20,11 +20,47 @@ end
 
 function MainButtonPanel:init()
 
-    local midPoint = self.win.height / 4
+    local termH = self.win.height
+    -- reduce height to the maximum possible while
+    -- still fitting 4 equally sized buttons with padding
+    termH = termH - math.fmod(termH-5, 4)
+    local bh = (termH - 5) / 4
+    local bw = self.win.width - 4 --button width
 
-    self.win:addButton("sort", "Sort", 2, 2, self.win.width - 4, 10, colours.red, colours.lime, function() self:sort() end)
-    self.win:addButton("register", "Register", 2, 14, self.win.width - 4, 10, colours.red, colours.lime, function() self:register() end)
+    self.win:addButton("sort", "Sort", 2, 2, bw, bh, colours.red, colours.lime,
+        function() self:sort() end
+    )
+    self.win:addButton("register", "Register", 2, 3+bh, bw, bh, colours.red, colours.lime,
+        function() self:register() end
+    )
+    self.win:addButton("clean", "Clean", 2, 4+(2*bh), bw, bh, colours.red, colours.lime,
+        function() self:clean() end
+    )
+    self.win:addButton("forget", "Forget", 2, 5+(3*bh), bw, bh, colours.red, colours.lime,
+        function() self:forget() end
+    )
 
+end
+
+function MainButtonPanel:clean()
+    self.rssObj:cleanUnregisteredItems(self.inputChestID)
+end
+
+function MainButtonPanel:cleanHandler(response)
+
+    --- @type Result
+    local res = response[1]
+    if res:is_ok() then
+        self.sw:setMessage({"Moved "..res:unwrap().." unregistered items into the input chest"})
+        self.sw:render()
+    else
+        self.sw:setMessage({"Failed to sort items due to error:", res:unwrap_err()})
+        self.sw:flash(colours.red, colours.black)
+    end
+end
+
+function MainButtonPanel:forget()
+    --TODO: this
 end
 
 function MainButtonPanel:sort()
@@ -39,9 +75,6 @@ end
 --- @return boolean unregisteredFound whether any unregistered items were found in the input chest
 function MainButtonPanel:sortHandler(evIn)
 
-    local prp = require("cc.pretty").pretty_print
-    prp(evIn)
-
     --- @type Result
     local res = evIn[1]
     if res:is_ok() then
@@ -50,7 +83,11 @@ function MainButtonPanel:sortHandler(evIn)
             self.sw:render()
             return false
         else
-            self.sw:setMessage({"Unregistered items found in input", "Please manually sort the", "remaining items into the chests", "Then press 'Register'"})
+            self.sw:setMessage({
+                "Unregistered items found in input. Please",
+                "manually sort the remaining items into the",
+                "chests Then press 'Register'"
+            })
             self.sw:flash(colours.red, colours.black)
             return true
         end
@@ -71,9 +108,19 @@ end
 
 function MainButtonPanel:registerHandler(evIn)
 
-    self.sw:setMessage({"Status: Idle"})
-    self.sw:render()
-
+    evIn[1]:handle(
+        function(registered)
+            self.sw:setMessage({"Registered "..registered.." item(s)"})
+            self.sw:render()
+        end,
+        function(err)
+            self.sw:setMessage({
+                "Failed to register items:",
+                err
+            })
+            self.sw:render()
+        end
+    )
 end
 
 --- @param winManObj WindowManager

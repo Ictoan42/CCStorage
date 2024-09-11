@@ -3,6 +3,8 @@ WM = require("/CCStorage.Common.WindowManagerClass")
 ICW = require("/CCStorage.Monitor_GUI.ItemCountWatcherClass")
 MBP = require("/CCStorage.Monitor_GUI.MainButtonPanelClass")
 SW = require("/CCStorage.Monitor_GUI.StatusWindowClass")
+R = require("/CCStorage.Common.ResultClass")
+local Ok, Err = R.Ok, R.Err
 
 local prp = require("cc.pretty").pretty_print
 
@@ -33,7 +35,7 @@ mainButtonPanel:draw2()
 local itemCounter = ICW.new(wm, rss, "itemCountWatcher", 2, 13, mX - 25, mY-13, colours.lightGrey, colours.black, colours.grey, statusWindow)
 if type(itemCounter) == "boolean" then return end
 
-local timerID = 0
+local SortTimerID = 0
 
 local function timerHandler(evIn)
 
@@ -41,7 +43,7 @@ local function timerHandler(evIn)
         itemCounter:requestList()
     end
 
-    timerID = os.startTimer(5)
+    SortTimerID = os.startTimer(5)
 
 end
 
@@ -49,23 +51,27 @@ local function modemMessageHandler(evIn)
 
     local decoded = RSS.DecodeResponse(evIn[5]):unwrap()
 
+    -- print(decoded[2])
+
     if decoded[2] == "sortFromInput" then
 
-        if mainButtonPanel:sortHandler(decoded) then
-            os.cancelTimer(timerID)
-        else
-            os.cancelTimer(timerID)
-            timerID = os.startTimer(0.1)
-        end
+        mainButtonPanel:sortHandler(decoded)
+        os.cancelTimer(SortTimerID)
+        SortTimerID = os.startTimer(0.1)
 
     elseif decoded[2] == "detectAndRegisterItems" then
 
         mainButtonPanel:registerHandler(decoded)
-        timerID = os.startTimer(5)
+        SortTimerID = os.startTimer(5)
 
     elseif decoded[2] == "organisedList" then
 
         itemCounter:handleListResponse(decoded)
+
+    elseif decoded[2] == "cleanUnregisteredItems" then
+
+        prp(decoded)
+        mainButtonPanel:cleanHandler(decoded)
 
     end
 
@@ -89,7 +95,7 @@ while true do
 
     elseif mev[1] == "modem_message" then
 
-        modemMessageHandler(mev, timerID)
+        modemMessageHandler(mev, SortTimerID)
 
     end
 

@@ -16,13 +16,7 @@ local ItemCountWatcherMetatable = {
 
 function ItemCountWatcher:requestList()
 
-    self.sw:setMessage({"Status: Getting item list"})
-    self.sw:render()
-
     self.rssObj:organisedList()
-
-    self.sw:setMessage({"Status: Idle"})
-    self.sw:render()
 
 end
 
