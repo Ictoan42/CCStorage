@@ -53,6 +53,9 @@ local function modemMessageHandler(evIn)
 
         if mainButtonPanel:sortHandler(decoded) then
             os.cancelTimer(timerID)
+        else
+            os.cancelTimer(timerID)
+            timerID = os.startTimer(0.1)
         end
 
     elseif decoded[2] == "detectAndRegisterItems" then
