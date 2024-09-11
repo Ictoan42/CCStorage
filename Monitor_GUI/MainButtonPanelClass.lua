@@ -51,16 +51,18 @@ function MainButtonPanel:cleanHandler(response)
     --- @type Result
     local res = response[1]
     if res:is_ok() then
-        self.sw:setMessage({"Moved "..res:unwrap().." unregistered items into the input chest"})
+        self.sw:setMessage({"Moved "..res:unwrap().." unregistered item(s) into the input chest"})
         self.sw:render()
     else
-        self.sw:setMessage({"Failed to sort items due to error:", res:unwrap_err()})
+        self.sw:setMessage({"Failed to clean items due to error:", res:unwrap_err()})
         self.sw:flash(colours.red, colours.black)
     end
 end
 
 function MainButtonPanel:forget()
     --TODO: this
+    self.sw:setMessage({"The Forget button doesn't do anything yet"," ",":)"})
+    self.sw:render()
 end
 
 function MainButtonPanel:sort()
