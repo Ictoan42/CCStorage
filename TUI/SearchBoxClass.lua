@@ -27,8 +27,15 @@ function SearchBox:draw()
     self.win:clear(true) -- clear window
     local windowW = self.w - 2
     local windowH = self.h - 2
+    local searchedList = self:filterSearchList(self.searchTerm)
     self.win:setCursorPos(1, 1)
-    self.win:setBackgroundColour(self.searchTermCol)
+    if searchedList ~= nil then
+        self.win:setBackgroundColour(self.searchTermCol)
+        self:clearListOverride()
+    else
+        self.win:setBackgroundColour(colours.red)
+        self:setListOverride("Invalid pattern")
+    end
     self.win:write(self.searchTerm) -- print current search term
     self.win:setCursorPos(1, 2)
     self.win:setBackgroundColour(self.bgCol)
@@ -40,8 +47,7 @@ function SearchBox:draw()
     self:rectifySelectedPos()
 
     -- print list
-    if self.listOverride == nil then
-        local searchedList = self:filterSearchList(self.searchTerm)
+    if self.listOverride == nil and searchedList ~= nil then
         local maxHeight = windowH - 2
         local listLen = #searchedList
 
@@ -163,11 +169,15 @@ function SearchBox:clearListOverride()
 end
 
 --- @param pattern string pattern to search for
---- @return table list list of entries that match the pattern
+--- @return table|nil list list of entries that match the pattern, or nil if the pattern is invalid
 function SearchBox:filterSearchList(pattern)
     local arrOut = {} -- in format {string, startindex, endindex}
     for k, v in pairs(self.searchList) do
-        local startindex, endindex = v:find(pattern)
+        local status, startindex, endindex = pcall(function() return string.find(v, pattern) end)
+        if status == false then
+            -- DBGMONPRINT("Failed to match pattern")
+            return
+        end
         if startindex ~= nil then
             arrOut[#arrOut+1] = {v, startindex, endindex}
         end
@@ -176,10 +186,15 @@ function SearchBox:filterSearchList(pattern)
 end
 
 function SearchBox:getCurrentSearchListLen()
-    self.currentListLen = math.min(
-        #self:filterSearchList(self.searchTerm),
-        self.h - 5
-    )
+    local searchedList = self:filterSearchList(self.searchTerm)
+    if searchedList == nil then
+        self.currentListLen = 0
+    else
+        self.currentListLen = math.min(
+            #self:filterSearchList(self.searchTerm),
+            self.h - 5
+        )
+    end
 end
 
 --- @param list table table of strings

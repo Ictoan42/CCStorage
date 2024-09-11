@@ -15,7 +15,8 @@ PRW = function(obj) return PR.render(PR.pretty(obj)) end
 local outChest = "minecraft:chest_271"
 --- @type ccTweaked.peripherals.Modem
 local modem = peripheral.find("modem")
-local rss = RSS.new(modem)
+modem.closeAll()
+local rss = RSS.new(modem, 20, 22)
 local termx, termy = term.getSize()
 print("start")
 term.clear()
@@ -95,10 +96,10 @@ local function refreshItemList()
 end
 
 local function handleCharEv(ev)
-    if ev[2] ~= "%" then -- don't let the user enter a "%" character because a single one breaks the find method
+    -- if ev[2] ~= "%" then -- don't let the user enter a "%" character because a single one breaks the find method
         sb:addToSearchTerm(ev[2])
         sb:draw()
-    end
+    -- end
 end
 
 local function handleKeyEv(ev)
@@ -138,7 +139,7 @@ local function handleKeyEv(ev)
                         sb.win:setBorderColour(colours.red)
                     end
                     sb:draw()
-                    DBGMONPRINT("Retrieved: "..tostring(retrieved))
+                    -- DBGMONPRINT("Retrieved: "..tostring(retrieved))
                 end,
                 function(err)
                     sb.win:setBorderColour(colours.red)
@@ -178,7 +179,7 @@ local function handleKeyEv(ev)
                         sb.win:setBorderColour(colours.red)
                     end
                     sb:draw()
-                    DBGMONPRINT("Retrieved: "..tostring(retrieved))
+                    -- DBGMONPRINT("Retrieved: "..tostring(retrieved))
                 end,
                 function(err)
                     sb.win:setBorderColour(colours.red)
