@@ -79,7 +79,7 @@ function StorageSystem:findItems(itemID)
     return self.itemHandler:findItems(itemID)
 end
 
---- @param from InventoryPeripheral
+--- @param inputChestID InventoryPeripheral
 --- @return nil
 --- Sort all items from the given chest into the system
 function StorageSystem:sortFromInput(inputChestID)
