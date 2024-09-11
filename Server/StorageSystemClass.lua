@@ -149,7 +149,7 @@ function StorageSystem:forgetItem(itemID)
 end
 
 --- @param dumpChest string
---- @return Result
+--- @return Result itemsMoved the number of items that have been moved
 --- Moves any unregistered items into dumpChest
 function StorageSystem:cleanUnregisteredItems(dumpChest)
     return self.itemHandler:cleanUnregisteredItems(dumpChest)

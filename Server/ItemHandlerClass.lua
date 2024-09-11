@@ -163,7 +163,7 @@ function itemSorter:findUnregisteredItems()
 end
 
 --- @param dumpChest string
---- @return Result
+--- @return Result itemsMoved the number of items that have been moved
 --- Moves any unregistered items into dumpChest
 function itemSorter:cleanUnregisteredItems(dumpChest)
     -- moves all unregistered items to the given output chest
@@ -176,10 +176,11 @@ function itemSorter:cleanUnregisteredItems(dumpChest)
 
     -- find all unregistered items
     local itemsToClean
-    local res = self:findUnregisteredItems() -- if we never found any unregistered items if itemsToClean == false then return false end -- check there's actually enough space
+    local res = self:findUnregisteredItems()
     if res:is_err() then return res
     else itemsToClean = res:unwrap() end
 
+    --- @type ccTweaked.peripherals.Inventory
     local dumpChestPeriph
     local dumpChestPeriphRes = Try(
         peripheral.wrap(dumpChest), "Peripheral '"..dumpChest.."' does not exist"
