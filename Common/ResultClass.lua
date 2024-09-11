@@ -69,6 +69,19 @@ function Result:ok_or(func)
     end
 end
 
+--- @param func function
+--- @return any
+--- If the Result is Err, returns it's contained error.
+--- If the Result is Ok, runs func() with the contained
+--- value as the first parameter
+function Result:err_or(func)
+    if self:is_err() then
+        return self:unwrap_err()
+    else
+        return func(self:unwrap())
+    end
+end
+
 --- @return boolean
 --- Returns true if the Result is Ok or false otherwise
 function Result:is_ok()
