@@ -196,22 +196,19 @@ function AdvancedWindow:setBorderColour(col)
 
 end
 
---- @return ccTweaked.colors.color
-function AdvancedWindow:getBackgroundColour(col)
+function AdvancedWindow:getBackgroundColour()
 
     return self.backgroundColour
 
 end
 
---- @return ccTweaked.colors.color
-function AdvancedWindow:getTextColour(col)
+function AdvancedWindow:getTextColour()
 
     return self.foregroundColour
 
 end
 
---- @return ccTweaked.colors.color
-function AdvancedWindow:getBorderColour(col)
+function AdvancedWindow:getBorderColour()
 
     return self.borderColour
 
