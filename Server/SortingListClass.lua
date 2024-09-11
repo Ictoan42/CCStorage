@@ -196,9 +196,9 @@ function sortingList:removeDest(itemName)
 end
 
 --- @param itemName string
---- @return string
+--- @return string|nil
 function sortingList:getDest(itemName)
-    self.logger:d("SortingList executing method getDest")
+    -- self.logger:d("SortingList executing method getDest")
 
     -- will just return nil if the dest doesn't exist
     return self.dests[itemName]
