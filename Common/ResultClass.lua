@@ -179,4 +179,23 @@ local function Try(val, err)
     end
 end
 
-return {Ok = Ok, Err = Err, Try = Try}
+--- @param result table
+--- @return Result (Result<Result>)
+--- Attempts to coerce the given table into being a Result
+local function Coerce(result)
+    if result == nil then
+        return Err("Input was nil")
+    end
+    if result.status ~= "ok" and result.status ~= "err" then
+        return Err("Input was not a valid result")
+    end
+    if result.status == "ok" and result.val ~= nil and result.err == nil then
+        return Ok(setmetatable(result, ResultMetatable))
+    end
+    if result.status == "err" and type(result.err) == "string" and result.val == nil then
+        return Ok(setmetatable(result, ResultMetatable))
+    end
+    return Err("Input was not a valid result")
+end
+
+return {Ok = Ok, Err = Err, Try = Try, Coerce = Coerce}
