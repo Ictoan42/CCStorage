@@ -17,6 +17,7 @@ local outChest = "minecraft:chest_271"
 local modem = peripheral.find("modem")
 local rss = RSS.new(modem)
 local termx, termy = term.getSize()
+print("start")
 term.clear()
 local sb = SB.new(
     term.current(),
@@ -122,6 +123,32 @@ local function handleKeyEv(ev)
         elseif ev[2] == 259 then
             sb:setSearchTerm("")
             sb:draw()
+        elseif ev[2] == 257 then
+            -- enter
+            local sel = sb:getSelected()[1]
+            local count, name = string.match(sel,"([0-9]+) +- ([^ ]+) +")
+            sb.win:setBorderColour(colours.white)
+            sb:draw()
+            local res = rss:retrieve(name, outChest, math.min(count, 64*10)):unwrap()[1]
+            res:handle(
+                function(retrieved)
+                    if retrieved then
+                        sb.win:setBorderColour(colours.lime)
+                    else
+                        sb.win:setBorderColour(colours.red)
+                    end
+                    sb:draw()
+                    DBGMONPRINT("Retrieved: "..tostring(retrieved))
+                end,
+                function(err)
+                    sb.win:setBorderColour(colours.red)
+                    sb:draw()
+                    DBGMONPRINT("Failed: "..err)
+                end
+            )
+            sleep(0.2)
+            sb.win:setBorderColour(colours.grey)
+            refreshItemList()
         end
     else
         if ev[2] == 259 then
