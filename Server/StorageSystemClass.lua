@@ -106,7 +106,7 @@ function StorageSystem:detectAndRegisterItems()
     local res = self.itemHandler:findUnregisteredItems()
     local unregisteredItems
     if res:is_ok() then
-        unregisteredItems = res
+        unregisteredItems = res:unwrap()
     else return res end
 
     if unregisteredItems == false then -- no unregistered items found
@@ -123,7 +123,7 @@ function StorageSystem:detectAndRegisterItems()
             v[1] -- chest name
         )
         if res2:is_err() then return res2
-        else itemsRegistered = itemsRegistered + res2:unwrap() end
+        else itemsRegistered = itemsRegistered + 1 end
     end
 
     return Ok(itemsRegistered)
