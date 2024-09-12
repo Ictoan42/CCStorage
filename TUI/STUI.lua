@@ -12,11 +12,14 @@ PRW = function(obj) return PR.render(PR.pretty(obj)) end
 -- dbgmon.setTextScale(0.5)
 -- dbgmon.clear()
 
+--TODO: make this use nonblocking calls
+
 local outChest = "minecraft:chest_271"
---- @type ccTweaked.peripherals.Modem
+--- @type ccTweaked.peripherals.WiredModem
+--- @diagnostic disable-next-line: assign-type-mismatch
 local modem = peripheral.find("modem")
 modem.closeAll()
-local rss = RSS.new(modem, 20, 22)
+local rss = RSS.new(modem, 20, 22):unwrap()
 local termx, termy = term.getSize()
 print("start")
 term.clear()
@@ -219,7 +222,7 @@ while true do
     end
 end
 
-term.redirect(term.native())
-term.setCursorPos(1,1)
-shell.run("clear")
-print("Exited")
+-- term.redirect(term.native())
+-- term.setCursorPos(1,1)
+-- shell.run("clear")
+-- print("Exited")

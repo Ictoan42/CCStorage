@@ -8,8 +8,12 @@ local Ok, Err = R.Ok, R.Err
 
 local prp = require("cc.pretty").pretty_print
 
+--- @type ccTweaked.peripherals.WiredModem
+--- @diagnostic disable-next-line: assign-type-mismatch
 local modem = peripheral.find("modem")
+
 --- @type ccTweaked.peripherals.Monitor
+---@diagnostic disable-next-line: assign-type-mismatch
 local mon = peripheral.wrap("left")
 if mon == nil then return end
 
@@ -18,7 +22,7 @@ local mX, mY = mon.getSize()
 mon.clear()
 
 modem.closeAll()
-local rss = RSS.new(modem, 20, 21, true)
+local rss = RSS.new(modem, 20, 21, true):unwrap()
 
 local wm = WM.new(mon)
 

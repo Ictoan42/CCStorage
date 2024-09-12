@@ -5,6 +5,7 @@
 local R = require("/CCStorage/Common/ResultClass")
 local PR = require("cc.pretty")
 local PRW = function(str) return PR.render(PR.pretty(str)) end
+local PRP = PR.pretty_print
 local Ok, Err, Try, Coerce = R.Ok, R.Err, R.Try, R.Coerce
 
 --- @param response table
@@ -157,6 +158,12 @@ local RemoteStorageSystemMetatable = {
     __index = RemoteStorageSystem
 }
 
+--- @param modem ccTweaked.peripherals.WiredModem
+--- @param port? integer default 20
+--- @param returnPort? integer default 21
+--- @param isNonBlocking? boolean default false
+--- @return Result RemoteStorageSystem
+--- Open a new connection to a remote storage system.
 local function new(modem, port, returnPort, isNonBlocking)
     -- args:
     --  - modem: modem object to send data through
@@ -168,21 +175,39 @@ local function new(modem, port, returnPort, isNonBlocking)
     returnPort = returnPort or 21
     isNonBlocking = isNonBlocking or false
 
-    -- get config
+    if modem.isWireless == nil or modem.isWireless() == true then
+        return Err("Modem is not a valid wired modem")
+    end
+
+    modem.closeAll()
     modem.open(returnPort)
+    -- get config
     modem.transmit(port, returnPort, {"getConfig"})
     local responseEv = table.pack(os.pullEvent("modem_message"))
-    local cfgResponse = responseEv[5]
+    -- PRP(decodeResponse(responseEv[5]):unwrap()[1]:unwrap())
+    local cfgResponse = decodeResponse(responseEv[5])
+    if cfgResponse:is_ok() then
+        cfgResponse = cfgResponse:unwrap()
+    else
+        return cfgResponse
+    end
 
-    return setmetatable({
-            cfg = cfgResponse,
+    local cfg
+    if cfgResponse[1]:is_ok() then
+        cfg = cfgResponse[1]:unwrap()
+    else
+        return cfgResponse[1]
+    end
+
+    return Ok(setmetatable({
+            cfg = cfg,
             outPort = port,
             inPort = returnPort,
             modem = modem,
             blocking = not isNonBlocking
         },
         RemoteStorageSystemMetatable
-    )
+    ))
 
 end
 
