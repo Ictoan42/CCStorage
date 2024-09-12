@@ -141,7 +141,12 @@ function RemoteStorageSystem:sendBlockingReq(arr)
     end
     self.modem.transmit(self.outPort, self.inPort, arr)
     local resEv = table.pack(os.pullEvent("modem_message"))
-    return decodeResponse(resEv[5])
+    local decoded = decodeResponse(resEv[5])
+    if decoded:is_ok() then
+        return decoded:unwrap()[1]
+    else
+        return decoded
+    end
 end
 
 function RemoteStorageSystem:sendNonBlockingReq(arr)

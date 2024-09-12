@@ -40,7 +40,7 @@ local sb = SB.new(
 local ctrlIsHeld
 
 local function getItemList()
-    local listIn = rss:organisedList():unwrap()[1]:unwrap()
+    local listIn = rss:organisedList():unwrap()
     -- DBGMONPRINT(listIn)
 
     local largestNumber = 0
@@ -173,7 +173,7 @@ local function handleKeyEv(ev)
             local count, name = string.match(sel,"([0-9]+) +- ([^ ]+) +")
             sb.win:setBorderColour(colours.white)
             sb:draw()
-            local res = rss:retrieve(name, outChest, math.min(count, 64)):unwrap()[1]
+            local res = rss:retrieve(name, outChest, math.min(count, 64))
             res:handle(
                 function(retrieved)
                     if retrieved then
