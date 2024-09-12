@@ -234,6 +234,7 @@ local function new(confFilePath)
     -- if sorting list storage file does not exist, create a blank on
     if not fs.exists(cfg.sortingListFilePath) then
         --- @type ccTweaked.fs.WriteHandle
+        --- @diagnostic disable-next-line: assign-type-mismatch
         local f = fs.open(cfg.sortingListFilePath, "w")
         f.write("\n")
         f.close()
@@ -254,7 +255,8 @@ local function new(confFilePath)
     ---------------
     local chestArray
     do
-        --- @type ccTweaked.peripherals.Modem
+        --- @type ccTweaked.peripherals.WiredModem
+        --- @diagnostic disable-next-line: assign-type-mismatch
         local modem = peripheral.find("modem")
         local networkNames = modem.getNamesRemote()
 
