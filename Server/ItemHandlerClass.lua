@@ -19,9 +19,9 @@ local itemSorter = {}
 --- @param slot number
 --- @param from string
 --- @param itemObj? table
---- @return Result
+--- @return Result boolean whether the item was sorted
 --- Sort an item from 'from' into the system. itemObj can be
---- passed in to avoid a peripheral call
+--- passed in to avoid a peripheral call.
 function itemSorter:sortItem(slot, from, itemObj)
     -- uses the stored sortingList to sort the item in the given slot
     -- of the given input chest into the stored chestArray
@@ -65,7 +65,7 @@ function itemSorter:sortItem(slot, from, itemObj)
 end
 
 --- @param from string
---- @return Result unregisteredFound whether or not any unregistered items were found in the input chest
+--- @return Result boolean whether or not any unregistered items were found in the input chest
 --- Sort all items from the given chest into the system
 function itemSorter:sortAllFromChest(from)
     -- uses the stored sortingList to sort all items in the given chest into the stored chestArray
@@ -117,9 +117,13 @@ function itemSorter:sortAllFromChest(from)
     return Ok(not unregisteredFound) -- invert to align with system-wide concept of "false" meaning bad and "true" meaning good
 end
 
---- @return Result (list of items, empty if none found)
---- Finds a list of items in the system that aren't currently
---- registered and returns it
+--- @return Result table list of items, maybe empty
+--- Finds all items in the system which don't have a registered storage location
+--- Return format:
+--- {
+---  {chestName, slot, count, itemName},
+---  {chestName, slot, count, itemName}
+--- }
 function itemSorter:findUnregisteredItems()
     -- returns the items found in the system which were not registered
     -- return format is the same as :findItems()
@@ -162,8 +166,8 @@ function itemSorter:findUnregisteredItems()
     return Ok(arrOut)
 end
 
---- @param dumpChest string
---- @return Result itemsMoved the number of items that have been moved
+--- @param dumpChest string peripheral ID
+--- @return Result integer the number of items that have been moved
 --- Moves any unregistered items into dumpChest
 function itemSorter:cleanUnregisteredItems(dumpChest)
     -- moves all unregistered items to the given output chest
@@ -206,26 +210,17 @@ function itemSorter:cleanUnregisteredItems(dumpChest)
 end
 
 --- @param itemName string
---- @return Result (list of items, maybe empty)
+--- @return Result table list of items
 --- Finds the specified item in the system.
 --- Return format:
+--- ```
 --- {
----  {chestName, slot, count, itemName},
----  {chestName, slot, count, itemName}
+---   {chestName, slot, count, itemName},
+---   {chestName, slot, count, itemName},
+---   ["count"] = totalCountInt
 --- }
+--- ```
 function itemSorter:findItems(itemName)
-    -- return the chest name(s) and slot number(s) of all occurrences of the item
-    -- returned as an array of array, structured like this:
-    -- {
-    --  {chestName, slot, count, itemName},
-    --  {chestName, slot, count, itemName}
-    -- }
-    --
-    -- also a special entry under the index "count" which is the total number of that item
-    --
-    -- will still be returned in this format even if only one item is found
-    -- will return false if no item is found
-
     self.logger:d("ItemHandler executing method findItems")
 
     if type(itemName) ~= "string" then
@@ -267,19 +262,19 @@ function itemSorter:findItems(itemName)
     return Ok(arrOut)
 end
 
---- @param itemName string
---- @param to string
---- @param count? number
+--- @param itemName string item ID
+--- @param destination string peripheral ID
+--- @param count? number default 64
 --- @param toSlot? number
---- @return Result returned Result<bool> if any items were retrieved
---- Finds the desired item, and moves 'count' of that item
---- to 'to'. 'count' is 64 by default.
-function itemSorter:retrieveItems(itemName, to, count, toSlot)
+--- @return Result boolean if any items were retrieved
+--- Finds the desired item, and moves `count` of that item
+--- to `destination`.
+function itemSorter:retrieveItems(itemName, destination, count, toSlot)
     -- retrieves the given item from the chestArray and places it in the given destination chest
 
     if type(itemName) ~= "string" then
         return Err("Item ID must be a string")
-    elseif type(to) ~= "string" then
+    elseif type(destination) ~= "string" then
         return Err("Destination peripheral ID must be a string")
     end
 
@@ -289,7 +284,7 @@ function itemSorter:retrieveItems(itemName, to, count, toSlot)
 
     local toPeriph
     local toPeriphRes = Try(
-        peripheral.wrap(to), "Peripheral '"..to.."' does not exist"
+        peripheral.wrap(destination), "Peripheral '"..destination.."' does not exist"
     )
     if toPeriphRes:is_ok() then toPeriph = toPeriphRes:unwrap()
     else return toPeriphRes end
@@ -348,7 +343,7 @@ function itemSorter:retrieveItems(itemName, to, count, toSlot)
 
                     self:retrieveItems(
                         itemName,
-                        to,
+                        destination,
                         count - numberOfItemsMoved, -- no need to clamp because count has to be larger than numberOfItemsMoved for us to be here in the first place
                         toSlot
                     )

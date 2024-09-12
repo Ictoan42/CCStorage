@@ -56,39 +56,28 @@ end
 
 --- @param liteMode? boolean
 --- @return Result
---- Get a list of all items in the system. Return format is and array,
---- in which every entry is the table returned from an individual
---- chestPeriph.list() call. If liteMode == false, each entry also
---- contains a chestName and chestSize entry
+--- Passthrough to ChestArray:list()
 function StorageSystem:list(liteMode)
     return self.chestArray:list(liteMode)
 end
 
---- @param getRegistration? boolean whether to include item registration data
+--- @param getRegistration? boolean
 --- @return Result
---- Returns a list of every item in the system. Format is
---- a table where t.itemID = { itemCount, ["reg"] = "destination"|nil }
---- OR if getRegistration is false or nil, then the return table
---- is in the format t.itemID = itemCount
+--- Passthrough to ChestArray:sortedList()
 function StorageSystem:organisedList(getRegistration)
     return self.chestArray:sortedList(getRegistration)
 end
 
 --- @param itemID string
 --- @return Result
---- Finds the specified item in the system.
---- Return format:
---- {
----  {chestName, slot, count, itemName},
----  {chestName, slot, count, itemName}
---- }
+--- Passthrough to ItemHandler:findItems()
 function StorageSystem:findItems(itemID)
     return self.itemHandler:findItems(itemID)
 end
 
 --- @param inputChestID string
---- @return Result unregisteredFound whether or not any unregistered items were found in the input chest
---- Sort all items from the given chest into the system
+--- @return Result unregisteredFound
+--- Passthrough to ItemHandler:sortAllFromChest()
 function StorageSystem:sortFromInput(inputChestID)
     return self.itemHandler:sortAllFromChest(inputChestID)
 end
@@ -97,16 +86,14 @@ end
 --- @param outputChestID string
 --- @param count? number
 --- @param toSlot? number
---- @return Result returned Result<bool> if any items were retrieved
---- Finds the desired item, and moves 'count' of that item
---- to 'to'. 'count' is 64 by default.
+--- @return Result boolean
+--- Passthrough to ItemHandler:retrieveItems()
 function StorageSystem:retrieve(itemID, outputChestID, count, toSlot)
     return self.itemHandler:retrieveItems(itemID, outputChestID, count, toSlot)
 end
 
---- @return Result (number of items registered)
---- Find all unregistered items in the system and register to the
---- chest they were found in
+--- @return Result integer number of items which have been registered
+--- Find all unregistered items in the system and register to the chest they were found in
 function StorageSystem:detectAndRegisterItems()
     self.logger:d("StorageSystem executing method detectAndRegisterItems")
 
@@ -138,22 +125,22 @@ end
 
 --- @param itemID string
 --- @param chestID string
---- @return Result (boolean)
---- Registers the given item to the given chest
+--- @return Result boolean
+--- Passthrough to SortingList:addDest()
 function StorageSystem:registerItem(itemID, chestID)
     return self.sortingList:addDest(itemID, chestID)
 end
 
 --- @param itemID string
---- @return Result (boolean)
---- Unregisters the given item from the system
+--- @return Result boolean
+--- Passthrough to SortingList:removeDest()
 function StorageSystem:forgetItem(itemID)
     return self.sortingList:removeDest(itemID)
 end
 
 --- @param dumpChest string
---- @return Result itemsMoved the number of items that have been moved
---- Moves any unregistered items into dumpChest
+--- @return Result integer
+--- Passthrough to ItemHandler:cleanUnregisteredItems()
 function StorageSystem:cleanUnregisteredItems(dumpChest)
     return self.itemHandler:cleanUnregisteredItems(dumpChest)
 end

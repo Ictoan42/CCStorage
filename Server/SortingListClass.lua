@@ -24,7 +24,7 @@ function sortingList:serialize()
 end
 
 --- @param str string
---- @return Result (boolean)
+--- @return Result boolean always returns either Err or Ok(true)
 --- Deserializes a list from the given string
 function sortingList:importFromText(str)
     -- imports a list from a string
@@ -65,8 +65,8 @@ end
 --- @param filePath string path of the sorting list file
 --- @param backupFilePath string path of the backup sorting list file
 --- @param muntedFilePath string path of where to put the broken file in case of failure
---- @return Result (boolean)
---- Deserializes a list from the given file
+--- @return Result boolean always returns either Err or Ok(true)
+--- Deserializes a list from the given file(s)
 function sortingList:importFromFile(filePath, backupFilePath, muntedFilePath)
     -- simple function to read a file and pass it to :importFromText()
 
@@ -76,6 +76,7 @@ function sortingList:importFromFile(filePath, backupFilePath, muntedFilePath)
     if f == nil then
         return Err("Couldn't open file: "..err)
     end
+    --TODO: handle empty files
     local fileText = f.readAll()
     f.close()
 
@@ -125,9 +126,9 @@ function sortingList:importFromFile(filePath, backupFilePath, muntedFilePath)
     return Ok(true)
 end
 
---- @param itemName string
---- @param chestName string
---- @return Result (boolean)
+--- @param itemName string item ID
+--- @param chestName string peripheral ID e.g. "minecraft:chest_84"
+--- @return Result boolean true if the item was registered, false if the item is already registered
 --- Registers the given item to the given chest
 function sortingList:addDest(itemName, chestName)
     -- add a destination to local memory and disk
@@ -159,8 +160,8 @@ function sortingList:addDest(itemName, chestName)
     end
 end
 
---- @param itemName string
---- @return Result (boolean)
+--- @param itemName string item ID
+--- @return Result boolean always returns either Err or Ok(true)
 --- Unregisters the given item from the system
 function sortingList:removeDest(itemName)
     -- remove the specified destination from local memory and disk storage
@@ -195,8 +196,8 @@ function sortingList:removeDest(itemName)
     return Ok(true)
 end
 
---- @param itemName string
---- @return string|nil
+--- @param itemName string item ID
+--- @return string|nil destination the item's registered destination, or nil if the item isn't registered
 function sortingList:getDest(itemName)
     -- self.logger:d("SortingList executing method getDest")
 
@@ -212,7 +213,7 @@ local sortingListMetatable = {
 --- @param backupFile string path of the backup sorting list file
 --- @param muntedFilePath string path of where to put the broken file in case of failure
 --- @param logger Logger
---- @return Result (SortingList)
+--- @return Result SortingList
 --- Creates a new Sorting List
 local function new(storageFile, backupFile, muntedFilePath, logger)
 

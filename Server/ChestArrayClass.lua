@@ -13,11 +13,26 @@ local Ok, Err, Try = R.Ok, R.Err, R.Try
 local chestArray = {}
 
 --- @param liteMode? boolean
---- @return Result
---- Get a list of all items in the system. Return format is and array,
---- in which every entry is the table returned from an individual
---- chestPeriph.list() call. If liteMode == false, each entry also
---- contains a chestName and chestSize entry
+--- @return Result table
+--- Get a list of all items in the system.
+--- Return format:
+--- ```
+--- {
+---   {
+---     [1] = { -- if slot 1 contains 8 grass blocks
+---       count = 8,
+---       name = "minecraft:grass_block"
+---     },
+---     [2] = nil, -- if slot 2 is empty
+---     ... for each item in this chest
+---
+---     -- VV These two only if liteMode==true
+---     ["chestName"] = "minecraft:chest_42",
+---     ["chestSize"] = 27
+---   },
+---   ... for each chest
+--- }
+--- ```
 function chestArray:list(liteMode)
     -- takes the list() func of every chest in the array and concatenates
     -- them together adds special "chestName" and "chestSize" entries in
@@ -87,15 +102,27 @@ function chestArray:list(liteMode)
 end
 
 --- @param getRegistration? boolean whether to include item registration data
---- @return Result
---- Returns a list of every item in the system. Format is a table where:
---- t.itemID = {
+--- @return Result table
+--- Get a list of every item in the system.
+---
+--- Return format IF getRegistration == false
+--- ```
+--- {
+---   ["minecraft:grass_block"] = 27,
+---   ["minecraft:stone"] = 75
+--- }
+--- ```
+---
+--- Return format IF getRegistration == true:
+--- ```
+--- {
+---   ["minecraft:grass_block"] = {
 ---     itemCount,
 ---     ["reg"] = "destination"|nil, -- chest this item is registered to, if it is registered
 ---     ["regStatus"] = boolean -- if all instances of this item are in the right chest
+---   }
 --- }
---- OR if getRegistration is false or nil, then the return table
---- is in the format t.itemID = itemCount
+--- ```
 function chestArray:sortedList(getRegistration)
 
     self.logger:d("ChestArray executing method sortedList with getRegistration: "..tostring(getRegistration))
@@ -152,13 +179,12 @@ local CAmetatable = {
     __index = chestArray
 }
 
---- @param chestArr table
+--- @param chestArr table array of chest ID string, e.g. "minecraft:chest_17"
 --- @param sortingList SortingList
 --- @param logger Logger
---- @return Result
---- Create a new ChestArray object. chestArr is an array of chest IDs
+--- @return Result ChestArray
+--- Create a new ChestArray object.
 local function new(chestArr, sortingList, logger)
-    -- chestArr is a 1-indexed array of chest identifiers, e.g. minecraft:chest_0
 
     -- safety check
     if #chestArr == 0 then
