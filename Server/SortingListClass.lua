@@ -104,7 +104,7 @@ function sortingList:importFromFile(filePath, backupFilePath, muntedFilePath)
         else
 
             self.logger:e("Backup loaded successfully")
-            self.logger:e("Saving broken file for potential manual recovery...")
+            self.logger:e("Saving broken file to "..muntedFilePath.." for potential manual recovery...")
 
             fs.move(filePath, muntedFilePath)
 
@@ -117,7 +117,7 @@ function sortingList:importFromFile(filePath, backupFilePath, muntedFilePath)
             f3.write(self:serialize())
             f3.close()
 
-            self.logger:e("Backup recover complete")
+            self.logger:e("Backup recovery complete")
 
         end
     end

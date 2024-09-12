@@ -56,7 +56,7 @@ function itemSorter:sortItem(slot, from, itemObj)
         return Ok(false)
     else
         if not peripheral.isPresent(dest) then
-            self.logger:e("sortItem failed because peripheral '"..dest.."' does not exist")
+            self.logger:e("sortItem failed to sort item '"..itemID.."' because peripheral '"..dest.."' does not exist")
             return Err("Peripheral '"..dest.."' does not exist")
         end
         fromPeriph.pushItems(dest, slot)
