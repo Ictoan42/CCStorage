@@ -2,7 +2,7 @@
 
 -- effectively just a shim API to send standard method calls over a modem connection
 
-local R = require("/CCStorage/Common/ResultClass")
+local R = require("/CCStorage.Common.ResultClass")
 local PR = require("cc.pretty")
 local PRW = function(str) return PR.render(PR.pretty(str)) end
 local PRP = PR.pretty_print
@@ -31,9 +31,9 @@ end
 
 --- @class RemoteStorageSystem
 --- @field cfg ConfigFile
---- @field outPort number
---- @field inPort number
---- @field modem modem
+--- @field outPort integer
+--- @field inPort integer
+--- @field modem ccTweaked.peripherals.WiredModem
 --- @field blocking boolean
 local RemoteStorageSystem = {}
 
