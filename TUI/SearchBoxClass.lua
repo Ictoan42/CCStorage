@@ -102,7 +102,7 @@ end
 --- @return nil|string
 function SearchBox:getSelected()
     local searchedList = self:filterSearchList(self.searchTerm)
-    if self.selectedEntry then
+    if self.selectedEntry ~= nil and searchedList ~= nil then
         return searchedList[self.selectedEntry]
     else
         return nil
