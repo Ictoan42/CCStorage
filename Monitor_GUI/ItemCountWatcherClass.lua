@@ -8,6 +8,7 @@ local ccs = require("cc.strings")
 --- @field win AdvancedWindow
 --- @field rssObj RemoteStorageSystem
 --- @field sw StatusWindow
+--- @field unregOnly boolean
 local ItemCountWatcher = {}
 
 local ItemCountWatcherMetatable = {
@@ -49,7 +50,6 @@ function ItemCountWatcher:draw(itemsList)
     for k, v in pairs(items) do
 
         if type(v) ~= "table" then
-            print("beans")
             -- organisedList was called by a different client without requesting
             -- reg info, we should ignore this call
             return
@@ -57,16 +57,28 @@ function ItemCountWatcher:draw(itemsList)
 
         local formToStore = {v[1], k, v["regStatus"]}
 
-        table.insert(sortedList, formToStore)
-        totalItemCount = totalItemCount + v[1]
+        if self.unregOnly and v["regStatus"] == false then
+            table.insert(sortedList, formToStore)
+            totalItemCount = totalItemCount + v[1]
+        elseif self.unregOnly == false then
+            table.insert(sortedList, formToStore)
+            totalItemCount = totalItemCount + v[1]
+        end
+
     end
 
     self.win:clear(true)
 
     self.win:setCursorPos(1, 1)
-    self.win:write(
-        "Total: " .. totalItemCount .. " items"
-    )
+    if self.unregOnly then
+        self.win:write(
+            "Total: "..totalItemCount.." unregistered item(s)"
+        )
+    else
+        self.win:write(
+            "Total: " .. totalItemCount .. " item(s)"
+        )
+    end
 
     if totalItemCount == 0 then
         return
@@ -138,6 +150,30 @@ local function new(winManObj, rssObj, name, x, y, w, h, bgcol, fgcol, bordercol,
     icw.win = winManObj:newWindow(name, x, y, w, h, bgcol, fgcol, bordercol)
 
     if icw.win == false then return false end
+
+    icw.unregOnly = false
+
+    icw.win:addButton(
+        "unregOnly",
+        "U",
+        icw.win.width - 7,
+        1,
+        5,
+        3,
+        colours.red,
+        colours.lime,
+        function()
+            ItemCounter.unregOnly = true
+            os.cancelTimer(SortTimerID)
+            SortTimerID = os.startTimer(0.1)
+        end,
+        true,
+        function()
+            ItemCounter.unregOnly = false
+            os.cancelTimer(SortTimerID)
+            SortTimerID = os.startTimer(0.1)
+        end
+    )
 
     icw.rssObj = rssObj
 

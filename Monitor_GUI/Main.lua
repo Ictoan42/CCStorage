@@ -5,8 +5,9 @@ MBP = require("/CCStorage.Monitor_GUI.MainButtonPanelClass")
 SW = require("/CCStorage.Monitor_GUI.StatusWindowClass")
 R = require("/CCStorage.Common.ResultClass")
 local Ok, Err = R.Ok, R.Err
-
 local prp = require("cc.pretty").pretty_print
+
+--TODO: This should use a config file
 
 --- @type ccTweaked.peripherals.WiredModem
 --- @diagnostic disable-next-line: assign-type-mismatch
@@ -37,16 +38,17 @@ local mainButtonPanel = MBP.new(wm, rss, "mainButtonPanel", mX - 21, 2, 20, mY-2
 if type(mainButtonPanel) == "boolean" then return end
 mainButtonPanel:draw2()
 
-local itemCounter = ICW.new(wm, rss, "itemCountWatcher", 2, 13, mX - 25, mY-13, colours.lightGrey, colours.black, colours.grey, statusWindow)
-if type(itemCounter) == "boolean" then return end
+-- needs to be accessible from inside callbacks
+ItemCounter = ICW.new(wm, rss, "itemCountWatcher", 2, 13, mX - 25, mY-13, colours.lightGrey, colours.black, colours.grey, statusWindow)
+if type(ItemCounter) == "boolean" then return end
 
-local SortTimerID = 0
+SortTimerID = 0
 local shouldSkipList
 
 local function timerHandler(evIn)
 
     if not shouldSkipList then
-        itemCounter:requestList()
+        ItemCounter:requestList()
     end
 
     SortTimerID = os.startTimer(1)
@@ -73,7 +75,7 @@ local function modemMessageHandler(evIn)
 
     elseif decoded[2] == "organisedList" then
 
-        itemCounter:handleListResponse(decoded)
+        ItemCounter:handleListResponse(decoded)
 
     elseif decoded[2] == "cleanUnregisteredItems" then
 
