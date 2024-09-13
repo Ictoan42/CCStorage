@@ -76,9 +76,12 @@ function sortingList:importFromFile(filePath, backupFilePath, muntedFilePath)
     if f == nil then
         return Err("Couldn't open file: "..err)
     end
-    --TODO: handle empty files
     local fileText = f.readAll()
     f.close()
+
+    if fileText == nil then
+        return Err("Sorting list file contents are nil")
+    end
 
     local result = self:importFromText(fileText)
 
@@ -93,6 +96,11 @@ function sortingList:importFromFile(filePath, backupFilePath, muntedFilePath)
         end
         local fileText2 = f2.readAll()
         f2.close()
+
+        if fileText2 == nil then
+            return Err("Sorting list backup file contents are nil")
+        end
+
         local result2 = self:importFromText(fileText2)
 
         if result2:is_err() then -- if shit is REALLY munted
