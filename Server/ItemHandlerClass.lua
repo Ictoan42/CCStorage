@@ -9,6 +9,7 @@ local EU = require("/CCStorage.Common.ExecUtils")
 local R = require("/CCStorage.Common.ResultClass")
 local Ok, Err, Try = R.Ok, R.Err, R.Try
 local SplitAndExecSafely = EU.SplitAndExecSafely
+local PRP = require("cc.pretty").pretty_print
 
 --- @class ItemHandler
 --- @field chestArray ChestArray
@@ -19,17 +20,24 @@ local itemSorter = {}
 --- @param slot number
 --- @param from string
 --- @param itemObj? table
---- @return Result boolean whether the item was sorted
---- Sort an item from 'from' into the system. itemObj can be
---- passed in to avoid a peripheral call.
+--- @return Result table whether the item was sorted, and a reason if it wasn't
+--- Sort an item from 'from' into the system. itemObj can be passed in to avoid a peripheral call.
+--- Return format:
+--- ```
+--- {
+---   boolean,                                 -- true if there were no issues, false otherwise
+---   "unregistered"|"no_item"|"no_space"|nil, -- a reason if it wasn't
+---   integer,                                 -- the number of items that couldn't be sorted
+---   integer,                                 -- the number of items that were sorted successfuly
+--- }
+--- ```
 function itemSorter:sortItem(slot, from, itemObj)
     -- uses the stored sortingList to sort the item in the given slot
     -- of the given input chest into the stored chestArray
     --
     -- returns Result<bool> where bool encodes whether an item was moved
 
-    --TODO: This should be resilient to the system running out of space
-    self.logger:d("ItemHandler executing method sortItem")
+    self.logger:d("ItemHandle executing method sortItem")
 
     local fromPeriphRes = Try(peripheral.wrap(from), "Peripheral '"..from.."' does not exist")
     local fromPeriph
@@ -44,7 +52,7 @@ function itemSorter:sortItem(slot, from, itemObj)
     itemObj = itemObj or fromPeriph.getItemDetail(slot)
 
     if itemObj == nil then -- if the given slot in "from" is empty
-        return Ok(false)
+        return Ok({false, "no_item", 0, 0})
     end
 
     local itemID = itemObj["name"]
@@ -53,20 +61,40 @@ function itemSorter:sortItem(slot, from, itemObj)
 
     if dest == nil then
         -- if the given item doesn't have a stored dest
-        return Ok(false)
+        return Ok({false, "unregistered", itemObj["count"], 0})
     else
         if not peripheral.isPresent(dest) then
             self.logger:e("sortItem failed to sort item '"..itemID.."' because peripheral '"..dest.."' does not exist")
             return Err("Peripheral '"..dest.."' does not exist")
         end
-        fromPeriph.pushItems(dest, slot)
-        return Ok(true)
+        local moved = fromPeriph.pushItems(dest, slot)
+        if moved == itemObj["count"] then -- if all items in the slot were moved
+            return Ok({true, nil, 0, moved})
+        else
+            return Ok({false, "no_space", itemObj["count"] - moved, moved}) -- how many were left over
+        end
     end
 end
 
+--- @class SortOutcome
+--- @field [integer] boolean success
+--- @field unregistered integer the number of items found that are unregistered
+--- @field no_space integer the number of items found that couldn't be moved due to lack of space
+--- @field successful integer the number of items that were successfully sorted
+local SortOutcome = {}
+
 --- @param from string
---- @return Result boolean whether or not any unregistered items were found in the input chest
+--- @return Result SortOutcome info about what the outcome was
 --- Sort all items from the given chest into the system
+--- Return format:
+--- ```
+--- {
+---   boolean, -- true if there were no problems, false if there were
+---   ["unregistered"] = integer, -- how many items couldn't be sorted because they are not registered
+---   ["no_space"] = integer, -- how many items couldn't be sorted because their dest chest is full
+---   ["successful"] = integer, -- how many items were sorted successfully
+--- }
+--- ```
 function itemSorter:sortAllFromChest(from)
     -- uses the stored sortingList to sort all items in the given chest into the stored chestArray
 
@@ -89,6 +117,11 @@ function itemSorter:sortAllFromChest(from)
 
     local unregisteredFound = false
 
+    local retInfo = {true}
+    retInfo["no_space"] = 0
+    retInfo["unregistered"] = 0
+    retInfo["successful"] = 0
+
     local funcsToExec = {}
 
     -- iterate over every slot in the chest, sorting the items in parallel
@@ -98,10 +131,17 @@ function itemSorter:sortAllFromChest(from)
             function()
                 local result = self:sortItem(k, from, v)
                 result:handle(
-                    function(itemMoved)
-                        if not itemMoved then
-                            self.logger:d("ItemHandler:sortAllFromChest found unregistered item: " .. v["name"])
-                            unregisteredFound = true
+                    function(outcomeInfo)
+                        retInfo["successful"] = retInfo["successful"] + outcomeInfo[4]
+                        if not outcomeInfo[1] then -- if not all items were sorted
+                            retInfo[1] = false
+                            local reason = outcomeInfo[2]
+                            retInfo[reason] = retInfo[reason] + outcomeInfo[3]
+                            -- if reason == "unregistered" then
+                            --     retInfo["unregistered"] = retInfo["unregistered"] + outcomeInfo[3]
+                            -- elseif reason == "no_space" then
+                            --     retInfo["no_space"] = retInfo["no_space"] + outcomeInfo[3]
+                            -- end
                         end
                     end,
                     function(err)
@@ -114,7 +154,8 @@ function itemSorter:sortAllFromChest(from)
 
     SplitAndExecSafely(funcsToExec)
 
-    return Ok(not unregisteredFound) -- invert to align with system-wide concept of "false" meaning bad and "true" meaning good
+    -- return Ok(not unregisteredFound) -- invert to align with system-wide concept of "false" meaning bad and "true" meaning good
+    return Ok(retInfo)
 end
 
 --- @return Result table list of items, maybe empty
@@ -208,6 +249,9 @@ function itemSorter:cleanUnregisteredItems(dumpChest)
 
     return Ok(itemsMoved)
 end
+
+--TODO: a variant of cleanUnregisteredItems that moves registered
+-- but misplaced items to the correct chest
 
 --- @param itemName string
 --- @return Result table list of items
@@ -312,8 +356,11 @@ function itemSorter:retrieveItems(itemName, destination, count, toSlot)
         return slres
     end
 
-    --TODO: this currently fails silently if the item is in the system, but not in
-    --its registered chest
+    --TODO: this currently fails silently if the item is in the
+    --system, but not in its registered chest
+
+    --TODO: replace this recursive implementation with one which
+    -- calls peripherals in parallel
 
     -- iterate over every slot in the chest
     local haveFoundItem = false

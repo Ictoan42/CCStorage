@@ -79,24 +79,35 @@ function MainButtonPanel:sortHandler(evIn)
 
     --- @type Result
     local res = evIn[1]
+    local outcome
     if res:is_ok() then
-        if res:unwrap() then
-            self.sw:setMessage({"Status: Idle"})
-            self.sw:render()
-            return false
-        else
-            self.sw:setMessage({
-                "Unregistered items found in input. Please",
-                "manually sort the remaining items into the",
-                "chests Then press 'Register'"
-            })
-            self.sw:flash(colours.red, colours.black)
-            return true
-        end
+        --- @type SortOutcome
+        outcome = res:unwrap()
     else
         self.sw:setMessage({"Failed to sort items due to error:", res:unwrap_err()})
         self.sw:flash(colours.red, colours.black)
         return false
+    end
+
+    if outcome[1] then
+        self.sw:setMessage({"Successfully sorted "..outcome.successful.." items"})
+        self.sw:render()
+        return false
+    else
+        local message = {"Failed to sort some items:", ""}
+        if outcome.unregistered > 0 then
+            table.insert(message, outcome.unregistered.." item(s) are not registered")
+        end
+        if outcome.no_space > 0  then
+            table.insert(message, outcome.no_space.." item(s) weren't sorted due to lack of space")
+        end
+        if outcome.successful > 0 then
+            table.insert(message, "")
+            table.insert(message, outcome.successful.." item(s) were sorted successfully")
+        end
+        self.sw:setMessage(message)
+        self.sw:flash(colours.red, colours.black)
+        return true
     end
 
 end
