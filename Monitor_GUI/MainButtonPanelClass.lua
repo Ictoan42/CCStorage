@@ -155,7 +155,7 @@ local function new(winManObj, rssObj, name, x, y, w, h, bgcol, fgcol, bordercol,
 
     mbp.win = winManObj:newWindow(name, x, y, w, h, bgcol, fgcol, bordercol)
 
-    if mbp.win == false then return false end
+    if mbp.win == nil then return false end
 
     mbp.rssObj = rssObj
 

@@ -149,7 +149,7 @@ local function new(winManObj, rssObj, name, x, y, w, h, bgcol, fgcol, bordercol,
 
     icw.win = winManObj:newWindow(name, x, y, w, h, bgcol, fgcol, bordercol)
 
-    if icw.win == false then return false end
+    if icw.win == nil then return false end
 
     icw.unregOnly = false
 

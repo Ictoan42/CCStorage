@@ -16,7 +16,7 @@ local WindowManager = {}
 --- @param bgcol ccTweaked.colors.color
 --- @param fgcol ccTweaked.colors.color
 --- @param bordercol ccTweaked.colors.color
---- @return AdvancedWindow|boolean
+--- @return AdvancedWindow|nil
 function WindowManager:newWindow(name, x, y, w, h, bgcol, fgcol, bordercol)
 
     -- check if it overlaps with any existing window
@@ -33,13 +33,13 @@ function WindowManager:newWindow(name, x, y, w, h, bgcol, fgcol, bordercol)
         local ny2 = y + h
         -- horrific if statement to see if they overlap
         if vx1 <= nx2 and vx2 >= nx1 and vy1 <= ny2 and vy2 >= ny1 then
-            return false -- they overlap
+            return nil -- they overlap
         end
     end
 
 
     if self.windows[name] ~= nil then
-        return false
+        return nil
     else
         self.windows[name] = AdvancedWindow.new(self.term, x, y, w, h, bgcol, fgcol, bordercol)
         return self.windows[name]
