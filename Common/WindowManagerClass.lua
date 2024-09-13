@@ -64,7 +64,11 @@ function WindowManager:handleMonitorTouch(evName, side, x, y)
     for k, v in pairs(self.windows) do
 
         -- find if the touch was on this window
-        if x >= v.x and y >= v.y and x <= v.x + v.width and y <= v.y + v.height then
+        if
+            x >= v.x and
+            y >= v.y and
+            x <= v.x + (v.width-1) and
+            y <= v.y + (v.height+1) then
             windowToUse = v
         end
     end

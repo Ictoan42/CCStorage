@@ -90,7 +90,12 @@ end
 function AdvancedWindow:activateButtonByCoord(x, y)
 
     for k, v in pairs(self.buttons) do
-        if x >= v.x and y >= v.y and x <= v.x + v.w and y <= v.y + v.h then
+        if
+            x >= v.x
+            and y >= v.y
+            and x <= v.x + (v.w-1)
+            and y <= v.y + (v.h-1)
+        then
             self:activateButtonByID(v.id)
             return true
         end
