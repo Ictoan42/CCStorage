@@ -37,25 +37,41 @@ end
 --- @param idleColour ccTweaked.colors.color
 --- @param activatedColour ccTweaked.colors.color
 --- @param callback function function to run when the button is pressed
+--- @param toggle boolean|nil if this button is a togglebutton
+--- @param callbackOff function|nil callback to run when this togglebutton is disabled
 --- @return boolean
 --- Create a new button
-function AdvancedWindow:addButton(id, label, x, y, w, h, idleColour, activatedColour, callback)
-    -- creates a button
-    -- args:
-    --  - id: string - the id to refer to the button by
-    --  - x: integer - x pos of the top left corner
-    --  - y: integer - y pos of the top left corner
-    --  - w: integer - width
-    --  - h: integer - height
-    --  - idleColour: colour - colour of the button by default
-    --  - activatedColour: colour - the colour to turn when pressed
-    --  - callback: function - the function to execute when pressed
+function AdvancedWindow:addButton(
+    id,
+	label,
+	x,
+	y,
+	w,
+	h,
+	idleColour,
+	activatedColour,
+	callback,
+	toggle,
+	callbackOff
+)
 
     if self.buttons[id] ~= nil then -- a button already exists with this id
         return false
     end
 
-    self.buttons[id] = Button.new(id, label, x, y, w, h, idleColour, activatedColour, callback)
+    self.buttons[id] = Button.new(
+        id,
+	    label,
+	    x,
+	    y,
+	    w,
+	    h,
+	    idleColour,
+	    activatedColour,
+	    callback,
+	    toggle,
+	    callbackOff
+	)
 
     self.buttons[id]:draw(false, self.innerWin)
 
@@ -78,9 +94,7 @@ function AdvancedWindow:activateButtonByID(id)
     if self.buttons[id] == nil then -- this button doesn't exist
         return false
     else
-        self.buttons[id]:flash(self.innerWin)
-        local ret = self.buttons[id].callback()
-        return ret
+        return self.buttons[id]:activate(self.innerWin)
     end
 end
 

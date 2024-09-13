@@ -8,16 +8,20 @@
 --- @field idleColour ccTweaked.colors.color
 --- @field activatedColour ccTweaked.colors.color
 --- @field callback function
+--- @field toggle boolean if this button is a togglebutton
+--- @field toggleState boolean the current state of this toggleButton
+--- @field callbackOff function callback to run when a togglebutton is turned off
 local Button = {}
 
---- @param isActivated boolean
+--- @param isActivated boolean ignored for togglebuttons
 --- @param window ccTweaked.Window
 function Button:draw(isActivated, window)
 
     local t = window
 
     local colToDraw
-    if isActivated then
+    if (self.toggle and self.toggleState) or isActivated then
+    -- if isActivated then
         colToDraw = self.activatedColour
     else
         colToDraw = self.idleColour
@@ -51,6 +55,38 @@ function Button:flash(window)
     self:draw(false, window)
 end
 
+--- @param window ccTweaked.Window
+--- @return any callbackReturn
+function Button:activate(window)
+    if self.toggle then
+        return self:activate_toggle(window)
+    else
+        return self:activate_nontoggle(window)
+    end
+end
+
+--- @param window ccTweaked.Window
+--- @return any callbackReturn
+function Button:activate_nontoggle(window)
+    self:flash(window)
+    return self.callback()
+end
+
+--- @param window ccTweaked.Window
+--- @return any callbackReturn
+function Button:activate_toggle(window)
+    -- toggles the colour of a togglebutton and runs the corresponding callback
+    self.toggleState = not self.toggleState
+    if self.toggleState == true then
+        -- button was just turned on by the above toggle
+        self:draw(true, window)
+        return self.callback()
+    else
+        self:draw(false, window)
+        return self.callbackOff()
+    end
+end
+
 local ButtonMetatable = {
     __index = Button
 }
@@ -64,9 +100,12 @@ local ButtonMetatable = {
 --- @param idleColour ccTweaked.colors.color
 --- @param activatedColour ccTweaked.colors.color
 --- @param callback function function to run when the button is pressed
+--- @param toggle boolean|nil whether this button is a togglebutton
+--- @param callbackOff function|nil function to run when this togglebutton is turned off
 --- @return table
 --- Create a new button
-local function new(id, label, x, y, w, h, idleColour, activatedColour, callback)
+local function new(id, label, x, y, w, h, idleColour, activatedColour, callback, toggle, callbackOff)
+    toggle = toggle or false
     return setmetatable(
         {
             id = id,
@@ -77,7 +116,9 @@ local function new(id, label, x, y, w, h, idleColour, activatedColour, callback)
             h = h,
             idleColour = idleColour,
             activatedColour = activatedColour,
-            callback = callback
+            callback = callback,
+            toggle = toggle,
+            callbackOff = callbackOff,
         },
         ButtonMetatable
     )
