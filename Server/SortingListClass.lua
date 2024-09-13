@@ -24,7 +24,7 @@ function sortingList:serialize()
 end
 
 --- @param str string
---- @return Result boolean always returns either Err or Ok(true)
+--- @return Result nil
 --- Deserializes a list from the given string
 function sortingList:importFromText(str)
     -- imports a list from a string
@@ -59,13 +59,13 @@ function sortingList:importFromText(str)
 
     self.dests = arrOut
 
-    return Ok(true)
+    return Ok()
 end
 
 --- @param filePath string path of the sorting list file
 --- @param backupFilePath string path of the backup sorting list file
 --- @param muntedFilePath string path of where to put the broken file in case of failure
---- @return Result boolean always returns either Err or Ok(true)
+--- @return Result nil
 --- Deserializes a list from the given file(s)
 function sortingList:importFromFile(filePath, backupFilePath, muntedFilePath)
     -- simple function to read a file and pass it to :importFromText()
@@ -131,7 +131,7 @@ function sortingList:importFromFile(filePath, backupFilePath, muntedFilePath)
         end
     end
 
-    return Ok(true)
+    return Ok()
 end
 
 --- @param itemName string item ID
@@ -169,7 +169,7 @@ function sortingList:addDest(itemName, chestName)
 end
 
 --- @param itemName string item ID
---- @return Result boolean always returns either Err or Ok(true)
+--- @return Result nil
 --- Unregisters the given item from the system
 function sortingList:removeDest(itemName)
     -- remove the specified destination from local memory and disk storage
@@ -201,7 +201,7 @@ function sortingList:removeDest(itemName)
     f.write(self:serialize())
     f.close()
 
-    return Ok(true)
+    return Ok()
 end
 
 --- @param itemName string item ID

@@ -90,7 +90,7 @@ function MainButtonPanel:sortHandler(evIn)
     end
 
     if outcome[1] then
-        self.sw:setMessage({"Successfully sorted "..outcome.successful.." items"})
+        self.sw:setMessage({"Sorted "..outcome.successful.." item(s)"})
         self.sw:render()
         return false
     else
