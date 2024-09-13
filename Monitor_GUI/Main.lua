@@ -80,6 +80,8 @@ local function modemMessageHandler(evIn)
     elseif decoded[2] == "cleanUnregisteredItems" then
 
         mainButtonPanel:cleanHandler(decoded)
+        os.cancelTimer(SortTimerID)
+        SortTimerID = os.startTimer(0.1)
 
     end
 
