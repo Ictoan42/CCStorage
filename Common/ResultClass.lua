@@ -126,7 +126,8 @@ local function result_tostring(result)
 end
 
 local function result_index(result, key)
-    if Result[key] ~= nil then
+    -- "val" is the only field which can be nil in a valid result
+    if Result[key] ~= nil or key == "val" then
         return Result[key]
     else
         error("Attempted to access non-existent field or method \""..key.."\" of a Result\n\n" .. debug.traceback(), 2)
@@ -142,9 +143,9 @@ local ResultMetatable = {
 --- @return Result
 --- Returns an Ok-variant Result containing val
 local function Ok(val)
-    if type(val) == "nil" then
-        error("Attempted to construct an Ok() Result with value of type nil\n\n"..debug.traceback(), 2)
-    end
+    -- if type(val) == "nil" then
+    --     error("Attempted to construct an Ok() Result with value of type nil\n\n"..debug.traceback(), 2)
+    -- end
     local obj = {}
     obj["status"] = "ok"
     obj["val"] = val
