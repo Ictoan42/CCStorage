@@ -207,6 +207,58 @@ function itemSorter:findUnregisteredItems()
     return Ok(arrOut)
 end
 
+--- @return Result table list of items, maybe empty
+--- Finds all items in the system which are registered, but in the wrong place
+--- Return format:
+--- {
+---  {chestName, slot, count, itemName},
+---  {chestName, slot, count, itemName}
+--- }
+function itemSorter:findMisplacedItems()
+    -- returns the items found in the system which were not registered
+    -- return format is the same as :findItems()
+
+    self.logger:d("ItemHandler executing method findMisplaceddItems")
+
+    local bigList
+    local res = self.chestArray:list()
+    if res:is_ok() then
+        bigList = res:unwrap()
+    else
+        return res
+    end
+    local arrOut = {}
+    arrOut["count"] = 0
+
+    -- copied from :findItems() with minor changes
+    for k, i in pairs(bigList) do -- iterate over every chest
+        -- "i" is an array like how chestPeriph.list() returns
+        for l, j in pairs(i) do -- iterate over every entry in array
+            if l ~= "chestName" and l ~= "chestSize" then -- ignore the special entries
+                if
+                    -- if this item is in a different chest to the one it's registered to
+                    self.sortingList:getDest(j["name"]) ~= i["chestName"]
+                    -- but the item IS registered _somewhere_
+                    and self.sortingList:getDest(j["name"]) ~= nil
+                then
+                    table.insert(arrOut,
+                        {
+                            i["chestName"], -- the name of the chest
+                            l, -- the slot it's in (the index in the list() result)
+                            j["count"],
+                            j["name"]
+                        }
+                    )
+                    arrOut["count"] = arrOut["count"] + j["count"]
+
+                end
+            end
+        end
+    end
+
+    return Ok(arrOut)
+end
+
 --- @param dumpChest string peripheral ID
 --- @return Result integer the number of items that have been moved
 --- Moves any unregistered items into dumpChest
@@ -250,8 +302,86 @@ function itemSorter:cleanUnregisteredItems(dumpChest)
     return Ok(itemsMoved)
 end
 
---TODO: a variant of cleanUnregisteredItems that moves registered
--- but misplaced items to the correct chest
+--- @param dumpChest string|nil Peripheral ID to dump items into if there isn't space in their correct chest. If nil, this function will err if it runs out of space
+--- @return Result table {numberOfItemsCleaned, numberOfItemsDumped}
+--- Finds any items in the system that are registered but misplaced, and moves them to the right place
+function itemSorter:cleanMisplacedItems(dumpChest)
+    -- find all misplaced items, sort each one
+    self.logger:d("ItemHandler executing method cleanMisplacedItems")
+
+    if type(dumpChest) ~= "string" and type(dumpChest) ~= "nil" then
+        return Err("Dump chest ID must be a string or nil")
+    end
+
+    --- @type ccTweaked.peripherals.Inventory|nil
+    local dumpChestPeriph
+    local dumpFreeSpace
+    if dumpChest ~= nil then
+        local dumpChestPeriphRes = Try(
+            peripheral.wrap(dumpChest), "Peripheral '"..dumpChest.."' does not exist"
+        )
+        if dumpChestPeriphRes:is_ok() then
+            dumpChestPeriph = dumpChestPeriphRes:unwrap()
+        else return dumpChestPeriphRes end
+        dumpFreeSpace = dumpChestPeriph.size() - #dumpChestPeriph.list() -- "size of chest" - "number of occupied slots"
+    end
+
+
+    -- find all misplaced items
+
+    -- ```
+    -- {
+    --  {chestName, slot, count, itemName},
+    --  {chestName, slot, count, itemName}
+    -- }
+    -- ```
+    --- @type table
+    local itemsToClean
+    local res = self:findMisplacedItems()
+    if res:is_err() then return res
+    else itemsToClean = res:unwrap() end
+
+    -- iterate over every misplaced item that was found
+    local itemsCleaned = 0
+    local itemsDumped = 0
+    for k, v in ipairs(itemsToClean) do -- using ipairs ignores the "count" entry without an explicit check
+        -- move the item to the output
+        -- itemsMoved = itemsMoved + dumpChestPeriph.pullItems(v[1], v[2])
+        local sortRes = self:sortItem(v[2], v[1])
+        if sortRes:is_ok() then
+            --- {
+            ---   boolean,                                 -- true if there were no issues, false otherwise
+            ---   "unregistered"|"no_item"|"no_space"|nil, -- a reason if it wasn't
+            ---   integer,                                 -- the number of items that couldn't be sorted
+            ---   integer,                                 -- the number of items that were sorted successfuly
+            --- }
+            local sortOutcome = sortRes:unwrap()
+            itemsCleaned = itemsCleaned + sortOutcome[4]
+            if sortOutcome[1] == false then -- if some items couldn't be moved
+                if sortOutcome[2] == "unregistered" then
+                    return Err("Tried to sort an unregistered item? findMisplacedItems fucked up")
+                elseif sortOutcome[2] == "no_item" then
+                    return Err("Tried to sort an item that doesn't exist? findMisplacedItems fucked up")
+                elseif sortOutcome[2] == "no_space" then
+                    if dumpChestPeriph == nil then
+                        return Err("Ran out of space (no dump chest specified)")
+                    else
+                        local moved = dumpChestPeriph.pullItems(v[1], v[2])
+                        if moved < sortOutcome[3] then
+                            return Err("Ran out of space in dump chest")
+                        else
+                            itemsDumped = itemsDumped + moved
+                        end
+                    end
+                end
+            end
+        else
+            return sortRes
+        end
+    end
+
+    return Ok({itemsCleaned, itemsDumped})
+end
 
 --- @param itemName string
 --- @return Result table list of items

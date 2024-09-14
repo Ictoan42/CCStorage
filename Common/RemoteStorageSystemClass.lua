@@ -116,6 +116,13 @@ function RemoteStorageSystem:cleanUnregisteredItems(dumpChest)
     return self:sendReq({"cleanUnregisteredItems", dumpChest})
 end
 
+--- @param dumpChest string|nil Peripheral ID to dump items into if there isn't space in their correct chest. If nil, this function will err if it runs out of space
+--- @return Result table {numberOfItemsCleaned, numberOfItemsDumped}
+--- Finds any items in the system that are registered but misplaced, and moves them to the right place
+function RemoteStorageSystem:cleanMisplacedItems(dumpChest)
+    return self:sendReq({"cleanMisplacedItems", dumpChest})
+end
+
 --- @return Result cfg the ConfigFile object
 --- Get the system's configuration
 function RemoteStorageSystem:getConfig()

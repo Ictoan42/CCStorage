@@ -145,6 +145,13 @@ function StorageSystem:cleanUnregisteredItems(dumpChest)
     return self.itemHandler:cleanUnregisteredItems(dumpChest)
 end
 
+--- @param dumpChest string|nil
+--- @return Result table
+--- Passthrough to ItemHandler:cleanMisplacedItems()
+function StorageSystem:cleanMisplacedItems(dumpChest)
+    return self.itemHandler:cleanMisplacedItems(dumpChest)
+end
+
 --- @return Result cfg the ConfigFile object
 --- Get the system's configuration
 function StorageSystem:getConfig()
