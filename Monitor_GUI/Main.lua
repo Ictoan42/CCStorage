@@ -59,8 +59,6 @@ local function modemMessageHandler(evIn)
 
     local decoded = RSS.DecodeResponse(evIn[5]):unwrap()
 
-    -- print(decoded[2])
-
     if decoded[2] == "sortFromInput" then
 
         mainButtonPanel:sortHandler(decoded)
@@ -79,7 +77,11 @@ local function modemMessageHandler(evIn)
 
     elseif decoded[2] == "cleanUnregisteredItems" then
 
-        mainButtonPanel:cleanHandler(decoded)
+        mainButtonPanel:cleanUnregisteredHandler(decoded)
+
+    elseif decoded[2] == "cleanMisplacedItems" then
+
+        mainButtonPanel:cleanMisplacedHandler(decoded)
         os.cancelTimer(SortTimerID)
         SortTimerID = os.startTimer(0.1)
 

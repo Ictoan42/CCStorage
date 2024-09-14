@@ -5,6 +5,7 @@
 --- @field rssObj RemoteStorageSystem
 --- @field sw StatusWindow
 --- @field inputChestID string
+--- @field unregMoved Result|nil
 local MainButtonPanel = {}
 
 local MainButtonPanelMetatable = {
@@ -34,7 +35,7 @@ function MainButtonPanel:init()
         function() self:register() end
     )
     self.win:addButton("clean", "Clean", 2, 4+(2*bh), bw, bh, colours.red, colours.lime,
-        function() self:clean() end
+        function() self:cleanUnreg() end
     )
     self.win:addButton("forget", "Forget", 2, 5+(3*bh), bw, bh, colours.red, colours.lime,
         function() self:forget() end
@@ -42,19 +43,54 @@ function MainButtonPanel:init()
 
 end
 
-function MainButtonPanel:clean()
+function MainButtonPanel:cleanUnreg()
     self.rssObj:cleanUnregisteredItems(self.inputChestID)
 end
 
-function MainButtonPanel:cleanHandler(response)
+function MainButtonPanel:cleanMisplaced()
+    self.rssObj:cleanMisplacedItems(self.inputChestID)
+end
+
+function MainButtonPanel:cleanUnregisteredHandler(response)
+
+    --- @type Result
+    local res = response[1]
+    self.unregMoved = res
+    self:cleanMisplaced()
+end
+
+function MainButtonPanel:cleanMisplacedHandler(response)
+
+    local message = {}
+    local good = true
+
+    if self.unregMoved ~= nil and self.unregMoved:is_ok() then
+        table.insert(message, "Moved "..self.unregMoved:unwrap().." unregistered item(s) into the input chest")
+        table.insert(message, "")
+    elseif self.unregMoved ~= nil then
+        table.insert(message, "Failed to clean unregistered items due to an error:")
+        table.insert(message, self.unregMoved:unwrap_err())
+        table.insert(message, "")
+        good = false
+    end
 
     --- @type Result
     local res = response[1]
     if res:is_ok() then
-        self.sw:setMessage({"Moved "..res:unwrap().." unregistered item(s) into the input chest"})
-        self.sw:render()
+        local sorted, dumped = table.unpack(res:unwrap())
+        table.insert(message, "Moved "..sorted.." misplaced item(s) into their correct chests")
+        table.insert(message, "")
+        table.insert(message, "Moved "..dumped.." misplaced item(s) into the input chest")
     else
-        self.sw:setMessage({"Failed to clean items due to error:", res:unwrap_err()})
+        table.insert(message, "Failed to clean misplaced items due to an error:")
+        table.insert(message, res:unwrap_err())
+        good = false
+    end
+
+    self.sw:setMessage(message)
+    if good then
+        self.sw:flash(colours.lime, colours.black)
+    else
         self.sw:flash(colours.red, colours.black)
     end
 end
