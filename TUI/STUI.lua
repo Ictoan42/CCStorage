@@ -133,7 +133,7 @@ local function handleKeyEv(ev)
             local count, name = string.match(sel,"([0-9]+) +- ([^ ]+) +")
             sb.win:setBorderColour(colours.white)
             sb:draw()
-            local res = rss:retrieve(name, outChest, math.min(count, 64*10)):unwrap()[1]
+            local res = rss:retrieve(name, outChest, math.min(count, 64*10))
             res:handle(
                 function(retrieved)
                     if retrieved then
