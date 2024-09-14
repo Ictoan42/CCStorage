@@ -1,5 +1,9 @@
 -- an attempt to copy rust's Result type in a way that makes sense for lua
 
+local PR = require("cc.pretty")
+local PRP = PR.pretty_print
+local PRW = function(val) return PR.render(PR.pretty(val)) end
+
 --- @class Result
 --- @field private status string
 --- @field private val any
@@ -120,7 +124,7 @@ local function result_tostring(result)
         if type(result:unwrap()) == "string" then
             return "Ok(\""..result:unwrap().."\")"
         else
-            return "Ok("..tostring(result:unwrap())..")"
+            return "Ok("..PRW(result:unwrap())..")"
         end
     elseif result:is_err() then
         return "Err(\""..result:unwrap_err().."\")"
