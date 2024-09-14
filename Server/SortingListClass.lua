@@ -156,6 +156,10 @@ function sortingList:addDest(itemName, chestName)
         -- save to memory
         self.dests[itemName] = chestName
 
+        -- backup file
+        fs.delete(self.backupFile)
+        fs.copy(self.file, self.backupFile)
+
         -- add dest to storageFile
         local f, err = fs.open(self.file, "a")
         if f == nil then
