@@ -32,7 +32,7 @@ local modem = peripheral.find("modem")
 local function methodDoesNotExistReturn(storsysobj, returnPort, badMethodName)
     storsysobj.logger:e("Invalid method name: '" .. badMethodName .. "'")
 
-    modem.transmit(returnPort, 20, false)
+    modem.transmit(returnPort, 20, {Err("No such method"), ""})
 end
 
 local function returnResult(storsysobj, returnPort, valToReturn)
