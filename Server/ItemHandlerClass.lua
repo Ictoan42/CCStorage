@@ -7,6 +7,7 @@
 
 local EU = require("/CCStorage.Common.ExecUtils")
 local R = require("/CCStorage.Common.ResultClass")
+local IU = require("/CCStorage.Common.InvUtils")
 local Ok, Err, Try = R.Ok, R.Err, R.Try
 local SplitAndExecSafely = EU.SplitAndExecSafely
 local PRP = require("cc.pretty").pretty_print
@@ -286,10 +287,10 @@ function itemSorter:cleanUnregisteredItems(dumpChest)
         dumpChestPeriph = dumpChestPeriphRes:unwrap()
     else return dumpChestPeriphRes end
 
-    local freeSpace = dumpChestPeriph.size() - #dumpChestPeriph.list() -- "size of chest" - "number of occupied slots"
+    local freeSpace = IU.freeSlots(dumpChestPeriph):unwrap()
 
-    if freeSpace < #res then -- not enough space to safely move items
-        return Err("Not enough free space in output")
+    if freeSpace < #itemsToClean then -- not enough space to safely move items
+        return Err("Ran out of space in dump chest")
     end
 
     -- iterate over every unregistered item that was found
@@ -323,7 +324,7 @@ function itemSorter:cleanMisplacedItems(dumpChest)
         if dumpChestPeriphRes:is_ok() then
             dumpChestPeriph = dumpChestPeriphRes:unwrap()
         else return dumpChestPeriphRes end
-        dumpFreeSpace = dumpChestPeriph.size() - #dumpChestPeriph.list() -- "size of chest" - "number of occupied slots"
+        dumpFreeSpace = IU.freeSlots(dumpChestPeriph):unwrap()
     end
 
 
@@ -503,8 +504,7 @@ function itemSorter:retrieveItems(itemName, destination, count, toSlot)
         return itemsRes
     end
 
-    --TODO: this is flawed - #tab misses any non-ordered entries
-    local spaceInDest = toPeriph.size() - #toPeriph.list()
+    local spaceInDest = IU.freeSlots(toPeriph):unwrap()
 
     if #filteredItems > spaceInDest then
         return Err("Not enough space in destination")
