@@ -444,7 +444,7 @@ end
 --- Finds the desired item, and moves `count` of that item
 --- to `destination`.
 function itemSorter:retrieveItems(itemName, destination, count, toSlot)
-    -- retrieves the given item from the chestArray and places it in the given destination chest
+    -- search through the system, find the first 'count' instances of 'itemName'
 
     if type(itemName) ~= "string" then
         return Err("Item ID must be a string")
@@ -454,8 +454,11 @@ function itemSorter:retrieveItems(itemName, destination, count, toSlot)
 
     self.logger:d("ItemHandler executing method retrieveItems")
 
-    count = count or 64 -- if count is not specified, assume a stack
+    --TODO: find the correct stack size
+    local stackSize = 64
+    count = count or stackSize -- if count is not specified, assume a stack
 
+    --- @type ccTweaked.peripherals.Inventory
     local toPeriph
     local toPeriphRes = Try(
         peripheral.wrap(destination), "Peripheral '"..destination.."' does not exist"
@@ -464,78 +467,69 @@ function itemSorter:retrieveItems(itemName, destination, count, toSlot)
     else return toPeriphRes end
 
     -- find item
-    local chestName = self.sortingList:getDest(itemName)
-
-    -- if the item isn't registered
-    if chestName == nil then
-        --TODO: an item not being registered shouldn't mean it can't be retrieved
-        self.logger:d("Cannot retrieve item '"..itemName.."' because it is not registered")
-        return Ok(false)
-    end
-
-    local itemsInChest = peripheral.call(chestName, "list")
-
-    -- does the chest array contain at least {count} of the item
-    local slres = self.chestArray:sortedList()
-    if slres:is_ok() then
-        if count > slres:unwrap(self.logger)[itemName] then -- if we do not have enough
-            self.logger:d("Cannot retrieve "..count.." of item '"..itemName.."'; not enough in storage")
-            return Ok(false)
+    local itemsRes = self:findItems(itemName)
+    local allItems
+    local filteredItems = {}
+    filteredItems.count = 0
+    if itemsRes:is_ok() then
+        allItems = itemsRes:unwrap()
+        if allItems.count < count then
+            return Err("Not enough items in the system")
         end
-    else
-        return slres
-    end
-
-    --TODO: this currently fails silently if the item is in the
-    --system, but not in its registered chest
-
-    --TODO: replace this recursive implementation with one which
-    -- calls peripherals in parallel
-
-    -- iterate over every slot in the chest
-    local haveFoundItem = false
-    for i=1, peripheral.call(chestName, "size") do
-
-        if itemsInChest[i] ~= nil then -- if this slot contains an item
-            if itemsInChest[i]["name"] == itemName then
-                -- we found the item
-                haveFoundItem = true
-                if itemsInChest[i]["count"] >= count then
-                    -- there is enough of this item in the first stack to do the move in one go
-                    toPeriph.pullItems(
-                        chestName, -- to pull from the chest we found the item in
-                        i, -- from the slot we found the item in
-                        count, -- with the count that was specified
-                        toSlot -- to the slot specified
+        -- filter list to only get the right number of items
+        for k, v in pairs(allItems) do
+            if
+                type(v) == "table" and
+                filteredItems.count < allItems.count
+            then
+                local stillToMove = count - filteredItems.count
+                if stillToMove == 0 then
+                    break
+                end
+                if stillToMove >= stackSize then
+                    -- move this whole stack
+                    table.insert(filteredItems, v)
+                    filteredItems.count = filteredItems.count + v[3]
+                elseif stillToMove < stackSize then
+                    -- move only what we need to
+                    table.insert(filteredItems,
+                        {v[1],v[2],stillToMove,v[4]}
                     )
-                    return Ok(true)
-                else
-                    -- move what is there, then recur this function with a reduced desired count
-                    local numberOfItemsMoved = toPeriph.pullItems(
-                        chestName,
-                        i,
-                        nil, -- don't specify a count so it moves all items there
-                        toSlot
-                    )
-
-                    self:retrieveItems(
-                        itemName,
-                        destination,
-                        count - numberOfItemsMoved, -- no need to clamp because count has to be larger than numberOfItemsMoved for us to be here in the first place
-                        toSlot
-                    )
-                    return Ok(true)
+                    filteredItems.count = filteredItems.count + stillToMove
                 end
             end
         end
+    else
+        return itemsRes
     end
 
-    if not haveFoundItem then
-        self.logger:e("Item '"..itemName.."' is in the system but not the right chest!")
-        return Ok(false)
+    --TODO: this is flawed - #tab misses any non-ordered entries
+    local spaceInDest = toPeriph.size() - #toPeriph.list()
+
+    if #filteredItems > spaceInDest then
+        return Err("Not enough space in destination")
     end
 
-    return Err("Supposed to be unreachable?")
+    -- construct a function to move each item in filteredList
+    local funcsToExec = {}
+
+    for k,v in pairs(filteredItems) do
+        table.insert(funcsToExec,
+            function()
+                if type(v) == "table" then -- skip "count"
+                    toPeriph.pullItems(
+                        v[1],
+                        v[2],
+                        v[3]
+                    )
+                end
+            end
+        )
+    end
+
+    SplitAndExecSafely(funcsToExec)
+
+    return Ok(true)
 end
 
 local itemSorterMetatable = {
