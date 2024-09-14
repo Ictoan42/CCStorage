@@ -117,7 +117,11 @@ end
 
 local function result_tostring(result)
     if result:is_ok() then
-        return "Ok(\""..tostring(result:unwrap()).."\")"
+        if type(result:unwrap()) == "string" then
+            return "Ok(\""..result:unwrap().."\")"
+        else
+            return "Ok("..tostring(result:unwrap())..")"
+        end
     elseif result:is_err() then
         return "Err(\""..result:unwrap_err().."\")"
     else
@@ -190,7 +194,7 @@ local function Coerce(result)
     if result.status ~= "ok" and result.status ~= "err" then
         return Err("Input was not a valid result")
     end
-    if result.status == "ok" and result.val ~= nil and result.err == nil then
+    if result.status == "ok" and result.err == nil then
         return Ok(setmetatable(
             {status = "ok", val = result.val},
             ResultMetatable
