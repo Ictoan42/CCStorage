@@ -72,7 +72,7 @@ function ItemCountWatcher:draw(itemsList)
     self.win:setCursorPos(1, 1)
     if self.unregOnly then
         self.win:write(
-            "Total: "..totalItemCount.." unregistered item(s)"
+            "Total: "..totalItemCount.." unregistered/misplaced item(s)"
         )
     else
         self.win:write(
