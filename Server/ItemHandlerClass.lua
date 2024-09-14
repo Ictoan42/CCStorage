@@ -437,6 +437,39 @@ function itemSorter:findItems(itemName)
     return Ok(arrOut)
 end
 
+--- @param itemName any
+--- @return Result table Err if the item isn't in the system
+--- Returns the same as getItemDetail() but takes an item ID as input.
+function itemSorter:getItemDetail(itemName)
+
+    if type(itemName) ~= "string" then
+        return Err("Item ID must be a string")
+    end
+
+    --- `{chestName, slot, count, itemName}`
+    local itemLoc
+    local itemLocsRes = self:findItems(itemName)
+    if itemLocsRes:is_ok() then
+        local itemLocs = itemLocsRes:unwrap()
+        if itemLocs[1] ~= nil then
+            itemLoc = itemLocs[1]
+        else
+            return Err("Item "..itemName.." is not in the system")
+        end
+    else return itemLocsRes end
+
+    --- @type ccTweaked.peripherals.Inventory
+    local chPeriph
+    local chPeriphRes = Try(peripheral.wrap(itemLoc[1]), "Peripheral "..itemLoc[1].." does not exist")
+    if chPeriphRes:is_ok() then
+        chPeriph = chPeriphRes:unwrap()
+    else return chPeriphRes end
+
+    local itemDetailRes = Try(chPeriph.getItemDetail(itemLoc[2]), "No item in slot "..itemLoc[2])
+    return itemDetailRes
+
+end
+
 --- @param itemName string item ID
 --- @param destination string peripheral ID
 --- @param count? number default 64

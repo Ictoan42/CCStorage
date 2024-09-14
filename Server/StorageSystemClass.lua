@@ -75,6 +75,13 @@ function StorageSystem:findItems(itemID)
     return self.itemHandler:findItems(itemID)
 end
 
+--- @param itemID string
+--- @return Result table
+--- Passthrough to ItemHandler:getItemDetail
+function StorageSystem:getItemDetail(itemID)
+    return self.itemHandler:getItemDetail(itemID)
+end
+
 --- @param inputChestID string
 --- @return Result unregisteredFound
 --- Passthrough to ItemHandler:sortAllFromChest()

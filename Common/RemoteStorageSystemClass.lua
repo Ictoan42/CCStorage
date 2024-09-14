@@ -47,6 +47,13 @@ function RemoteStorageSystem:list(liteMode)
     return self:sendReq({"list", liteMode})
 end
 
+--- @param itemName any
+--- @return Result table Err if the item isn't in the system
+--- Returns the same as getItemDetail() but takes an item ID as input.
+function RemoteStorageSystem:getItemDetail(itemName)
+    return self:sendReq({"getItemDetail", itemName})
+end
+
 --- @param getRegistration? boolean whether to include item registration data
 --- @return Result
 --- Returns a list of every item in the system. Format is
