@@ -488,8 +488,12 @@ function itemSorter:retrieveItems(itemName, destination, count, toSlot)
 
     self.logger:d("ItemHandler executing method retrieveItems")
 
-    --TODO: find the correct stack size
-    local stackSize = 64
+    local itemDetail
+    local itemDetailRes = self:getItemDetail(itemName)
+    if itemDetailRes:is_ok() then
+        itemDetail = itemDetailRes:unwrap()
+    else return itemDetailRes end
+    local stackSize = itemDetail.maxCount
     count = count or stackSize -- if count is not specified, assume a stack
 
     --- @type ccTweaked.peripherals.Inventory
