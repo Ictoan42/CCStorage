@@ -1,4 +1,5 @@
 local R = require("/CCStorage.Common.ResultClass")
+local EU = require("/CCStorage.Common.ExecUtils")
 local Ok, Err = R.Ok, R.Err
 
 --- @class NameCache
@@ -121,22 +122,55 @@ end
 --- Get the display names of every item in the system
 --- @return Result nil
 function NameCache:cacheAllNames()
-    --TODO: This is horrifically slow because each call to getDisplayName() calls list() AND does filesystem operations to save the new list
-    local listRes = self.chestArray:sortedList()
+
+    local listRes = self.chestArray:list()
     local list
     if listRes:is_ok() then list = listRes:unwrap()
     else return listRes end
 
-    for k, v in pairs(list) do
-        if self.names[k] == nil then
-            -- get the display name of this item if we don't have it
-            local getRes = self:getDisplayName(k)
-            local name
-            if getRes:is_ok() then name = getRes:unwrap()
-            else return getRes end
-            self.names[k] = name
+    local funcsToExec = {}
+
+    -- store which itemIDs already have a function generated to process
+    -- to avoid generating identical functions
+    local alreadyProcessed = {}
+
+    for k1, chest in pairs(list) do
+        local chestName = chest.chestName
+        -- remove these two entries before iterating over items
+        list.chestName = nil
+        list.chestSize = nil
+        for slot, item in pairs(chest) do
+            if type(slot) == "string" then
+                goto continue
+            end
+            local itemID = item.name
+            if self.names[itemID] == nil and alreadyProcessed[itemID] == nil then
+                -- we don't have this one, get it
+                local chPeriphRes = Try(peripheral.wrap(chestName),"Peripheral '"..chestName.."' does not exist")
+                local chPeriph
+                if chPeriphRes:is_ok() then chPeriph = chPeriphRes:unwrap()
+                else return chPeriphRes end
+
+                table.insert(funcsToExec,
+                    function()
+                        local detail = chPeriph.getItemDetail(slot)
+                        if detail == nil then
+                            self.logger:e("cacheAllNames tried to get detail of empty slot "..slot.." in chest "..chestName)
+                        else
+                            self.names[itemID] = detail.name
+                        end
+                    end
+                )
+
+                alreadyProcessed[itemID] = true
+            end
+            ::continue::
         end
     end
+
+    EU.SplitAndExecSafely(funcsToExec)
+
+    self:saveToFile()
 
     return Ok()
 end
