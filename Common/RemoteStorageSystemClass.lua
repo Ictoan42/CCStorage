@@ -47,11 +47,35 @@ function RemoteStorageSystem:list(liteMode)
     return self:sendReq({"list", liteMode})
 end
 
---- @param itemName any
+--- @param itemName string
 --- @return Result table Err if the item isn't in the system
 --- Returns the same as getItemDetail() but takes an item ID as input.
 function RemoteStorageSystem:getItemDetail(itemName)
     return self:sendReq({"getItemDetail", itemName})
+end
+
+--- @param itemName string
+--- @return Result string Err if the item isn't in the system or cache
+--- Gets the display name of an item
+function RemoteStorageSystem:getDisplayName(itemName)
+    return self:sendReq({"getDisplayName", itemName})
+end
+
+--- @return table
+--- Return format:
+--- ```
+--- {
+---   ["itemID"] = "Display Name"
+--- }
+--- ```
+function RemoteStorageSystem:getDisplayNameTable()
+    return self:sendReq({"getDisplayNameTable"})
+end
+
+--- @return Result nil
+--- Get the display names of every item in the system
+function RemoteStorageSystem:cacheAllNames()
+    return self:sendReq({"cacheAllNames"})
 end
 
 --- @param getRegistration? boolean whether to include item registration data

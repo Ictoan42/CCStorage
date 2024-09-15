@@ -5,6 +5,7 @@ Result = require("/CCStorage.Common.ResultClass")
 ChestArray = require("/CCStorage.Server.ChestArrayClass")
 ItemHandler = require("/CCStorage.Server.ItemHandlerClass")
 SortingList = require("/CCStorage.Server.SortingListClass")
+NameCache = require("/CCStorage.Server.NameCacheClass")
 CCLogger = require("/CCLogger") -- this file is in root
 local pr = require("cc.pretty")
 local prp = pr.pretty_print
@@ -20,6 +21,7 @@ Ok, Err, Try = Result.Ok, Result.Err, Result.Try
 --- @field chestArray ChestArray
 --- @field sortingList SortingList
 --- @field itemHandler ItemHandler
+--- @field nameCache NameCache
 local StorageSystem = {}
 
 --- @param listStr string
@@ -80,6 +82,25 @@ end
 --- Passthrough to ItemHandler:getItemDetail
 function StorageSystem:getItemDetail(itemID)
     return self.itemHandler:getItemDetail(itemID)
+end
+
+--- @param itemID string
+--- @return Result string
+--- Passthrough to NameCache:getDisplayName
+function StorageSystem:getDisplayName(itemID)
+    return self.nameCache:getDisplayName(itemID)
+end
+
+--- @return Result table
+--- Passthrough to NameCache:getDict
+function StorageSystem:getDisplayNameTable()
+    return Ok(self.nameCache:getDict())
+end
+
+--- @return Result nil
+--- Passthrough to NameCache:cacheAllNames
+function StorageSystem:cacheAllNames()
+    return self.nameCache:cacheAllNames()
 end
 
 --- @param inputChestID string
@@ -312,6 +333,27 @@ local function new(confFilePath)
         )
     end
 
+    ---------------
+    -- INIT NAMECACHE
+    ---------------
+
+    -- if file does not exist, make a blank one
+    if not fs.exists(cfg.nameCacheFilePath) then
+        --- @type ccTweaked.fs.WriteHandle
+        --- @diagnostic disable-next-line: assign-type-mismatch
+        local f = fs.open(cfg.nameCacheFilePath, "w")
+        f.write("\n")
+        f.close()
+    end
+    local nameCache = NameCache.new(
+        cfg.nameCacheFilePath,
+        cfg.nameCacheBackupFilePath,
+        cfg.nameCacheBrokenFilePath,
+        itemHandler,
+        chestArray,
+        logger
+    ):unwrap(logger)
+
     logger:i("--- INIT COMPLETE ---")
 
     local c1 = term.getTextColour()
@@ -325,7 +367,8 @@ local function new(confFilePath)
             confFile = cfg,
             chestArray = chestArray,
             sortingList = sortingList,
-            itemHandler = itemHandler
+            itemHandler = itemHandler,
+            nameCache = nameCache
         },
         StorageSystemMetatable
     )
