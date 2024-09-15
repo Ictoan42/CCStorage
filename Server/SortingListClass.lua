@@ -9,12 +9,12 @@ local sortingList = {}
 
 --- @return string
 --- Converts the stored list to a single string, and returns it
-function sortingList:serialize()
+function sortingList:serialise()
     -- converts the stored list into a single string
     -- each entry is in format "modid:itemid modid:chestname_id"
     -- entries are seperated by newlines
 
-    self.logger:d("SortingList executing method serialize")
+    self.logger:d("SortingList executing method serialise")
 
     local strOut = ""
     for k, v in pairs(self.dests) do
@@ -25,10 +25,10 @@ end
 
 --- @param str string
 --- @return Result nil
---- Deserializes a list from the given string
+--- Deserialises a list from the given string
 function sortingList:importFromText(str)
     -- imports a list from a string
-    -- string is the same format as is output by :serialize()
+    -- string is the same format as is output by :serialise()
 
     self.logger:d("SortingList executing method importFromText")
 
@@ -66,7 +66,7 @@ end
 --- @param backupFilePath string path of the backup sorting list file
 --- @param muntedFilePath string path of where to put the broken file in case of failure
 --- @return Result nil
---- Deserializes a list from the given file(s)
+--- Deserialises a list from the given file(s)
 function sortingList:importFromFile(filePath, backupFilePath, muntedFilePath)
     -- simple function to read a file and pass it to :importFromText()
 
@@ -123,7 +123,7 @@ function sortingList:importFromFile(filePath, backupFilePath, muntedFilePath)
             if f3 == nil then
                 return Err("Failed to open file: "..err3)
             end
-            f3.write(self:serialize())
+            f3.write(self:serialise())
             f3.close()
 
             self.logger:e("Backup recovery complete")
@@ -202,7 +202,7 @@ function sortingList:removeDest(itemName)
     if f == nil then
         return Err("Couldn't open storage file: "..err)
     end
-    f.write(self:serialize())
+    f.write(self:serialise())
     f.close()
 
     return Ok()
