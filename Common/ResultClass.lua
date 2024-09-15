@@ -112,6 +112,30 @@ function Result:is_err()
     end
 end
 
+--- @param func function
+--- @return any
+--- If the Result is Err, returns it unchanged
+--- If the Result is Ok, returns the result of func() with the contained value as the first argument
+function Result:map(func)
+    if self:is_err() then
+        return self
+    else
+        return Ok(func(self:unwrap()))
+    end
+end
+
+--- @param func function
+--- @return any
+--- If the Result is Ok, returns it unchanged
+--- If the Result is Err, returns the result of func() with the contained error as the first argument
+function Result:map_err(func)
+    if self:is_ok() then
+        return self
+    else
+        return Err(func(self:unwrap_err()))
+    end
+end
+
 --- @private
 --- Prints an error describing the broken state
 --- that a Result has got itself into
