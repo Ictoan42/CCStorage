@@ -26,13 +26,13 @@ local function modemMessageHandler(evIn)
 
     if decoded[2] == "sortFromInput" then
 
-        mainButtonPanel:sortHandler(decoded)
+        MainButtonPanel:sortHandler(decoded)
         os.cancelTimer(SortTimerID)
         SortTimerID = os.startTimer(0.1)
 
     elseif decoded[2] == "detectAndRegisterItems" then
 
-        mainButtonPanel:registerHandler(decoded)
+        MainButtonPanel:registerHandler(decoded)
         os.cancelTimer(SortTimerID)
         SortTimerID = os.startTimer(0.1)
 
@@ -46,11 +46,11 @@ local function modemMessageHandler(evIn)
 
     elseif decoded[2] == "cleanUnregisteredItems" then
 
-        mainButtonPanel:cleanUnregisteredHandler(decoded)
+        MainButtonPanel:cleanUnregisteredHandler(decoded)
 
     elseif decoded[2] == "cleanMisplacedItems" then
 
-        mainButtonPanel:cleanMisplacedHandler(decoded)
+        MainButtonPanel:cleanMisplacedHandler(decoded)
         os.cancelTimer(SortTimerID)
         SortTimerID = os.startTimer(0.1)
 
@@ -89,23 +89,21 @@ local function main(confFilePath)
 
     local inputChest = Config.inputChest
 
-    local statusWindow = SW.new(wm, rss, "statusWindow", 2, 2, mX - 25, 10, colours.lightGrey, colours.black, colours.grey)
-    if type(statusWindow) == "boolean" then return end
-    statusWindow:setMessage({"Status: Idle"})
-    statusWindow:render()
+    StatusWindow = SW.new(wm, rss, "statusWindow", 2, 2, mX - 25, 10, colours.lightGrey, colours.black, colours.grey)
+    if type(StatusWindow) == "boolean" then return end
+    StatusWindow:setMessage({"Status: Idle"})
+    StatusWindow:render()
 
-    local mainButtonPanel = MBP.new(wm, rss, "mainButtonPanel", mX - 21, 2, 20, mY-2, colours.lightGrey, colours.black, colours.grey, statusWindow, inputChest)
-    if type(mainButtonPanel) == "boolean" then return end
-    mainButtonPanel:draw2()
+    MainButtonPanel = MBP.new(wm, rss, "mainButtonPanel", mX - 21, 2, 20, mY-2, colours.lightGrey, colours.black, colours.grey, StatusWindow, inputChest)
+    if type(MainButtonPanel) == "boolean" then return end
+    MainButtonPanel:draw2()
 
     -- needs to be accessible from inside callbacks
-    ItemCounter = ICW.new(wm, rss, "itemCountWatcher", 2, 13, mX - 25, mY-13, colours.lightGrey, colours.black, colours.grey, statusWindow)
+    ItemCounter = ICW.new(wm, rss, "itemCountWatcher", 2, 13, mX - 25, mY-13, colours.lightGrey, colours.black, colours.grey, StatusWindow)
     if type(ItemCounter) == "boolean" then return end
 
     SortTimerID = 0
     local shouldSkipList
-
-    print("start loop")
 
     os.startTimer(0.1)
 
