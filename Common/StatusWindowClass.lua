@@ -82,14 +82,19 @@ end
 --- @param bgcol ccTweaked.colors.color
 --- @param fgcol ccTweaked.colors.color
 --- @param bordercol ccTweaked.colors.color
---- @return StatusWindow|boolean
+--- @return StatusWindow|nil
+--- @return string|nil
 local function new(winManObj, name, x, y, w, h, bgcol, fgcol, bordercol)
 
     local sw = {}
 
-    sw.win = winManObj:newWindow(name, x, y, w, h, bgcol, fgcol, bordercol)
+    local win, err = winManObj:newWindow(name, x, y, w, h, bgcol, fgcol, bordercol)
 
-    if sw.win == nil then return false end
+    if win == nil then
+        return nil, err
+    else
+        sw.win = win
+    end
 
     sw = setmetatable(
         sw,

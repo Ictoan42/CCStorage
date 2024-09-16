@@ -2,7 +2,7 @@ RSS = require("/CCStorage.Common.RemoteStorageSystemClass")
 WM = require("/CCStorage.Common.WindowManagerClass")
 ICW = require("/CCStorage.Monitor_GUI.ItemCountWatcherClass")
 MBP = require("/CCStorage.Monitor_GUI.MainButtonPanelClass")
-SW = require("/CCStorage.Monitor_GUI.StatusWindowClass")
+SW = require("/CCStorage.Common.StatusWindowClass")
 R = require("/CCStorage.Common.ResultClass")
 CF = require("/CCStorage.Common.ConfigFileClass")
 local Ok, Err = R.Ok, R.Err
@@ -114,8 +114,8 @@ local function main(confFilePath)
     local inputChest = Config.inputChest
     local dumpChest = Config.dumpChest or inputChest
 
-    local statusWindow = SW.new(wm, rss, "statusWindow", 2, 2, mX - 25, 10, colours.lightGrey, colours.black, colours.grey)
-    if type(statusWindow) == "boolean" then return end
+    local statusWindow, err = SW.new(wm, "statusWindow", 2, 2, mX - 25, 10, colours.lightGrey, colours.black, colours.grey)
+    if statusWindow == nil then return err end
     statusWindow:setMessage({"Idle"})
     statusWindow:render()
 
