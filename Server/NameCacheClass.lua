@@ -157,7 +157,7 @@ function NameCache:cacheAllNames()
                         if detail == nil then
                             self.logger:e("cacheAllNames tried to get detail of empty slot "..slot.." in chest "..chestName)
                         else
-                            self.names[itemID] = detail.name
+                            self.names[itemID] = detail.displayName
                         end
                     end
                 )
