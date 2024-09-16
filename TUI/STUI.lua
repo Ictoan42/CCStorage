@@ -1,60 +1,69 @@
 RSS = require("/CCStorage.Common.RemoteStorageSystemClass")
 SB = require("/CCStorage.TUI.SearchBoxClass")
+SW = require("/CCStorage.Common.StatusWindowClass")
+WM = require("/CCStorage.Common.WindowManagerClass")
 CCS = require("cc.strings")
 PR = require("cc.pretty")
 PRW = function(obj) return PR.render(PR.pretty(obj)) end
 
--- this program is structured as an event loop that reacts to key press events.
--- specifically, it reacts to "char" events to type in the search box, and then
--- "key" and "key_up" events to track backspaces and ctrl-key combos
-
--- local dbgmon = peripheral.wrap("right")
--- dbgmon.setTextScale(0.5)
--- dbgmon.clear()
-
---TODO: make this use nonblocking calls
+--TODO: this should use a config file
 
 local outChest = "minecraft:chest_271"
 --- @type ccTweaked.peripherals.WiredModem
 --- @diagnostic disable-next-line: assign-type-mismatch
 local modem = peripheral.find("modem")
 modem.closeAll()
-local rss = RSS.new(modem, 20, 22):unwrap()
+local rss = RSS.new(modem, 20, 22, true):unwrap()
 local termx, termy = term.getSize()
 print("start")
 term.clear()
-local sb = SB.new(
-    term.current(),
-    2,
-    4,
-    termx-2,
-    termy-5,
-    colours.black,
-    colours.white,
-    colours.grey,
-    colours.lightGrey,
-    colours.grey,
-    colours.grey
-)
+local wm = WM.new(term.current())
+local sw, swerr = SW.new(wm, "statusWindow", 2, 2, termx-2, 3, colours.black, colours.white, colours.grey)
+if sw == nil then
+    error("sw is nil: "..swerr)
+end
+local sb = SB.new(wm, 2, 6, termx-2, termy-6, colours.black, colours.white, colours.grey, colours.lightGrey, colours.grey, colours.grey)
 
 local ctrlIsHeld
+local resetBorderColourTimerID = -1 -- i don't think timer IDs can be negative???
 
-local function getItemList()
-    local listIn = rss:organisedList():unwrap()
+local function requestItemList()
+    sb:setListOverride("Refreshing...")
+    sb:draw()
+    rss:organisedList()
+end
+
+--- @param colour ccTweaked.colors.color
+local function flashBorderColour(colour)
+    sb.win:setBorderColour(colour)
+    os.cancelTimer(resetBorderColourTimerID)
+    resetBorderColourTimerID = os.startTimer(0.2)
+end
+
+--- @param evIn table modem_message event
+local function handleItemListResponse(evIn)
     -- DBGMONPRINT(listIn)
+    --- @type Result
+    local res = evIn[1]
+    local listIn
+    if res:is_ok() then
+        listIn = res:unwrap()
+    else
+        error("Couldn't decode list response: "..res:unwrap_err())
+    end
 
     local largestNumber = 0
-    for k, v in pairs(listIn) do
+    for itemID, item in pairs(listIn) do
         -- DBGMONPRINT(v)
-        if v >= largestNumber then largestNumber = v end
+        if item.count >= largestNumber then largestNumber = item.count end
     end
     local numLength = string.len(tostring(largestNumber))
     local wordLength = table.pack(sb.win.innerWin.getSize())[1] - (numLength + 3)
 
     local arrOut = {} -- table in format {item_list_entry_string, count}
-    for k, v in pairs(listIn) do
-        local numStr = CCS.ensure_width(tostring(v), numLength)
-        local nameStr = CCS.ensure_width(tostring(k), wordLength)
+    for itemID, item in pairs(listIn) do
+        local numStr = CCS.ensure_width(tostring(item.count), numLength)
+        local nameStr = CCS.ensure_width(tostring(itemID), wordLength)
         table.insert(
             arrOut,
             {
@@ -63,7 +72,7 @@ local function getItemList()
                     numStr,
                     nameStr
                 ),
-                v
+                item.count
             }
         )
     end
@@ -85,24 +94,56 @@ local function getItemList()
         )
     end
 
-    return stringArrOut
-end
-
-local function refreshItemList()
-    sb:setListOverride("Refreshing...")
-    sb:draw()
-    sb:setSearchList(
-        getItemList()
-    )
+    sb:setSearchList(stringArrOut)
     sb:clearListOverride()
     sb:draw()
 end
 
-local function handleCharEv(ev)
-    -- if ev[2] ~= "%" then -- don't let the user enter a "%" character because a single one breaks the find method
-        sb:addToSearchTerm(ev[2])
+local function handleRetrieveResponse(evIn)
+    --- @type Result
+    local res = evIn[1]
+    res:handle(
+        function(retrieved)
+            if retrieved then
+                flashBorderColour(colours.lime)
+            else
+                flashBorderColour(colours.red)
+            end
+            sb:draw()
+            sw:setMessage({"Retrieved items successfully"})
+            sw:render()
+            -- DBGMONPRINT("Retrieved: "..tostring(retrieved))
+        end,
+        function(err)
+            flashBorderColour(colours.red)
+            sw:setMessage({err})
+            sw:render()
+        end
+    )
+    requestItemList()
+end
+
+local function handleModemMessageEv(ev)
+
+    local decoded = RSS.DecodeResponse(ev[5]):unwrap()
+
+    if decoded[2] == "organisedList" then
+        handleItemListResponse(decoded)
+    elseif decoded[2] == "retrieve" then
+        handleRetrieveResponse(decoded)
+    end
+end
+
+local function handleTimerEv(ev)
+    if ev[2] == resetBorderColourTimerID then
+        sb.win:setBorderColour(colours.grey)
         sb:draw()
-    -- end
+    end
+end
+
+local function handleCharEv(ev)
+    sb:addToSearchTerm(ev[2])
+    sb:draw()
 end
 
 local function handleKeyEv(ev)
@@ -123,7 +164,7 @@ local function handleKeyEv(ev)
             sb:draw()
         elseif ev[2] == 82 then
             -- r
-            refreshItemList()
+            requestItemList()
         elseif ev[2] == 259 then
             sb:setSearchTerm("")
             sb:draw()
@@ -133,26 +174,7 @@ local function handleKeyEv(ev)
             local count, name = string.match(sel,"([0-9]+) +- ([^ ]+) +")
             sb.win:setBorderColour(colours.white)
             sb:draw()
-            local res = rss:retrieve(name, outChest, math.min(count, 64*10))
-            res:handle(
-                function(retrieved)
-                    if retrieved then
-                        sb.win:setBorderColour(colours.lime)
-                    else
-                        sb.win:setBorderColour(colours.red)
-                    end
-                    sb:draw()
-                    -- DBGMONPRINT("Retrieved: "..tostring(retrieved))
-                end,
-                function(err)
-                    sb.win:setBorderColour(colours.red)
-                    sb:draw()
-                    DBGMONPRINT("Failed: "..err)
-                end
-            )
-            sleep(0.2)
-            sb.win:setBorderColour(colours.grey)
-            refreshItemList()
+            rss:retrieve(name, outChest, math.min(count, 64*10))
         end
     else
         if ev[2] == 259 then
@@ -173,26 +195,7 @@ local function handleKeyEv(ev)
             local count, name = string.match(sel,"([0-9]+) +- ([^ ]+) +")
             sb.win:setBorderColour(colours.white)
             sb:draw()
-            local res = rss:retrieve(name, outChest, math.min(count, 64))
-            res:handle(
-                function(retrieved)
-                    if retrieved then
-                        sb.win:setBorderColour(colours.lime)
-                    else
-                        sb.win:setBorderColour(colours.red)
-                    end
-                    sb:draw()
-                    -- DBGMONPRINT("Retrieved: "..tostring(retrieved))
-                end,
-                function(err)
-                    sb.win:setBorderColour(colours.red)
-                    sb:draw()
-                    DBGMONPRINT("Failed: "..err)
-                end
-            )
-            sleep(0.2)
-            sb.win:setBorderColour(colours.grey)
-            refreshItemList()
+            rss:retrieve(name, outChest, math.min(count, 64))
         end
     end
     return false
@@ -204,9 +207,7 @@ local function handleKeyUpEv(ev)
     end
 end
 
-local list = getItemList()
-sb:setSearchList(list)
-sb:draw()
+requestItemList()
 
 ctrlIsHeld = false
 while true do
@@ -219,6 +220,10 @@ while true do
         end
     elseif ev[1] == "key_up" then
         handleKeyUpEv(ev)
+    elseif ev[1] == "modem_message" then
+        handleModemMessageEv(ev)
+    elseif ev[1] == "timer" then
+        handleTimerEv(ev)
     end
 end
 

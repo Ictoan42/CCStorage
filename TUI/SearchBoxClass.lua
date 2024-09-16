@@ -208,7 +208,7 @@ local SearchBoxMetatable = {
     __index = SearchBox
 }
 
---- @param parent ccTweaked.peripherals.Monitor|ccTweaked.term.Redirect
+--- @param wm WindowManager
 --- @param x number
 --- @param y number
 --- @param w number
@@ -221,9 +221,12 @@ local SearchBoxMetatable = {
 --- @param searchTermCol ccTweaked.colors.color
 --- @return table
 --- Create a new Search Box
-local function new(parent, x, y, w, h, bgCol, fgCol, borderCol, highlightCol, selectedCol, searchTermCol)
+local function new(wm, x, y, w, h, bgCol, fgCol, borderCol, highlightCol, selectedCol, searchTermCol)
 
-    local window = AW.new(parent, x, y, w, h, bgCol, fgCol, borderCol)
+    local window, err = wm:newWindow("searchBox", x, y, w, h, bgCol, fgCol, borderCol)
+    if window == nil then
+        error(err)
+    end
 
     local sb = setmetatable(
         {
