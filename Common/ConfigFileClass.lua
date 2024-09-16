@@ -26,7 +26,7 @@ local function new(filePath)
 
     for line in fileContents:gmatch("([^\n]+)") do -- iterate over everything between the "\n"s (iterate over every line)
 
-        if line:sub(1, 1) ~= "#" then -- "if this line is not a comment"
+        if line:sub(1,1) ~= "#" and line:sub(1,2) ~= "--" then -- "if this line is not a comment"
 
             -- find the " = " that seperates key from value
             local splitStart, splitEnd = line:find(" = ")
@@ -46,6 +46,7 @@ local function new(filePath)
     end
 
     -- the "opts" table already has all the properties of the object, now just slap on the methods
+    -- (there are no methods)
     return setmetatable(opts, ConfigFileMetatable)
 end
 
