@@ -75,7 +75,7 @@ local function modemMessageHandler(evIn)
 
         ItemCounter:handleListResponse(decoded)
 
-    elseif decoded[2] == "getDisplayNameTable" then
+    elseif decoded[2] == "getCacheTable" then
 
         ItemCounter:handleCacheResponse(decoded)
 
