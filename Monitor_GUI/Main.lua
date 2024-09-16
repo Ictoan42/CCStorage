@@ -75,6 +75,10 @@ local function modemMessageHandler(evIn)
 
         ItemCounter:handleListResponse(decoded)
 
+    elseif decoded[2] == "getDisplayNameTable" then
+
+        ItemCounter:handleNamesResponse(decoded)
+
     elseif decoded[2] == "cleanUnregisteredItems" then
 
         mainButtonPanel:cleanUnregisteredHandler(decoded)

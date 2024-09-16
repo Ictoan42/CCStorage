@@ -9,6 +9,8 @@ local ccs = require("cc.strings")
 --- @field rssObj RemoteStorageSystem
 --- @field sw StatusWindow
 --- @field unregOnly boolean
+--- @field nameTable table
+--- @field list table
 local ItemCountWatcher = {}
 
 local ItemCountWatcherMetatable = {
@@ -29,7 +31,8 @@ function ItemCountWatcher:handleListResponse(evIn)
 
     res:handle(
         function(val)
-            self:draw(val)
+            self.list = val
+            self.rssObj:getDisplayNameTable()
         end,
         function(err)
             print("Failed to parse response to list request: "..err)
@@ -38,7 +41,26 @@ function ItemCountWatcher:handleListResponse(evIn)
 
 end
 
-function ItemCountWatcher:draw(itemsList)
+--- @param evIn table a modem message
+function ItemCountWatcher:handleNamesResponse(evIn)
+
+    --- @type Result
+    local res = evIn[1]
+
+    res:handle(
+        function(val)
+            self.nameTable = val
+            self:draw(self.list, self.nameTable)
+        end,
+        function(err)
+            print("Failed to parse name table response: "..err)
+        end
+    )
+end
+
+--- @param itemsList table from rss:organisedList(true)
+--- @param nameTable table from rss:getDisplayNameTable()
+function ItemCountWatcher:draw(itemsList, nameTable)
 
     -- itemsList is an argument to pass in a premade list from rss:organisedList(true)
 
@@ -110,7 +132,12 @@ function ItemCountWatcher:draw(itemsList)
     for y=1, math.min(self.win.height, #sortedList) do
         self.win:setCursorPos(1, y + yOffset)
         local c = ccs.ensure_width(tostring(sortedList[y][1]), maxNumLength)
-        local n = tostring(sortedList[y][2])
+        local n
+        if nameTable[sortedList[y][2]] ~= nil then
+            n = nameTable[sortedList[y][2]]
+        else
+            n = tostring(sortedList[y][2])
+        end
         local n2 = n:sub(1, math.min(n:len(), maxNameLength - 4))
 
         if n:len() > maxNameLength - 4 then
@@ -145,7 +172,10 @@ local function new(winManObj, rssObj, name, x, y, w, h, bgcol, fgcol, bordercol,
     -- winManObj is the window manager object to draw onto
     -- rssObj is the remote storage system object to watch the size of
 
-    local icw = {}
+    local icw = {
+        nameTable = {},
+        list = {}
+    }
 
     icw.win = winManObj:newWindow(name, x, y, w, h, bgcol, fgcol, bordercol)
 
