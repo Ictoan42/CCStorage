@@ -2,7 +2,6 @@
 
 --- @class StatusWindow
 --- @field win AdvancedWindow
---- @field rssObj RemoteStorageSystem
 local StatusWindow = {}
 
 local StatusWindowMetatable = {
@@ -75,7 +74,6 @@ function StatusWindow:render()
 end
 
 --- @param winManObj WindowManager
---- @param rssObj RemoteStorageSystem
 --- @param name string the name of the window
 --- @param x number
 --- @param y number
@@ -85,15 +83,13 @@ end
 --- @param fgcol ccTweaked.colors.color
 --- @param bordercol ccTweaked.colors.color
 --- @return StatusWindow|boolean
-local function new(winManObj, rssObj, name, x, y, w, h, bgcol, fgcol, bordercol)
+local function new(winManObj, name, x, y, w, h, bgcol, fgcol, bordercol)
 
     local sw = {}
 
     sw.win = winManObj:newWindow(name, x, y, w, h, bgcol, fgcol, bordercol)
 
     if sw.win == nil then return false end
-
-    sw.rssObj = rssObj
 
     sw = setmetatable(
         sw,
