@@ -127,7 +127,11 @@ function MainButtonPanel:sortHandler(evIn)
 
     if outcome[1] then
         self.sw:setMessage({"Sorted "..outcome.successful.." item(s)"})
-        self.sw:render()
+        if outcome.successful > 0 then
+            self.sw:flash(colours.lime, colours.black)
+        else
+            self.sw:render()
+        end
         return false
     else
         local message = {"Failed to sort some items:", ""}
@@ -160,14 +164,18 @@ function MainButtonPanel:registerHandler(evIn)
     evIn[1]:handle(
         function(registered)
             self.sw:setMessage({"Registered "..registered.." item(s)"})
-            self.sw:render()
+            if registered > 0 then
+                self.sw:flash(colours.lime, colours.black)
+            else
+                self.sw:render()
+            end
         end,
         function(err)
             self.sw:setMessage({
                 "Failed to register items:",
                 err
             })
-            self.sw:render()
+            self.sw:flash(colours.red, colours.black)
         end
     )
 end
