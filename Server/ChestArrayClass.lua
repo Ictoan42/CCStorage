@@ -26,7 +26,7 @@ local chestArray = {}
 ---     [2] = nil, -- if slot 2 is empty
 ---     ... for each item in this chest
 ---
----     -- VV These two only if liteMode==true
+---     -- VV These two only if liteMode==false
 ---     ["chestName"] = "minecraft:chest_42",
 ---     ["chestSize"] = 27
 ---   },
