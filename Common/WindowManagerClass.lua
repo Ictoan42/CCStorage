@@ -17,23 +17,29 @@ local WindowManager = {}
 --- @param fgcol ccTweaked.colors.color
 --- @param bordercol ccTweaked.colors.color
 --- @return AdvancedWindow|nil
+--- @return string|nil
 function WindowManager:newWindow(name, x, y, w, h, bgcol, fgcol, bordercol)
 
     -- check if it overlaps with any existing window
     for k, v in pairs(self.windows) do -- iterate over every window
         -- get existing window corner
         local vx1 = v.x
-        local vx2 = v.x + v.width
+        local vx2 = v.x + (v.width-1)
         local vy1 = v.y
-        local vy2 = v.y + v.height
+        local vy2 = v.y + (v.height-1)
         -- get new window corner
         local nx1 = x
-        local nx2 = x + w
+        local nx2 = x + (w-1)
         local ny1 = y
-        local ny2 = y + h
+        local ny2 = y + (h-1)
         -- horrific if statement to see if they overlap
-        if vx1 <= nx2 and vx2 >= nx1 and vy1 <= ny2 and vy2 >= ny1 then
-            return nil -- they overlap
+        if
+            vx1 <= nx2
+            and vx2 >= nx1
+            and vy1 <= ny2
+            and vy2 >= ny1
+        then
+            return nil, "overlapping" -- they overlap
         end
     end
 
