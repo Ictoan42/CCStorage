@@ -369,7 +369,8 @@ local function new(confFilePath)
         f.write("\n")
         f.close()
     end
-    nameCache = NameCache.new(
+    nameCache = NameCache.new_inplace(
+        nameCache,
         cfg.nameCacheFilePath,
         cfg.nameCacheBackupFilePath,
         cfg.nameCacheBrokenFilePath,

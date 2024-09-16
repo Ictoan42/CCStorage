@@ -199,14 +199,15 @@ function NameStackCache:cacheAll()
     return Ok()
 end
 
+--- @param inp table an empty table to convert into the cache object
 --- @param cacheFile string
 --- @param backupCacheFile string
 --- @param muntedCacheFile string
 --- @param itemHandler ItemHandler
 --- @param logger Logger
---- @return Result NameStackCache
+--- @return Result nil
 --- Create a new NameStackCache
-local function new(cacheFile, backupCacheFile, muntedCacheFile, itemHandler, chestArray, logger)
+local function new_inplace(inp, cacheFile, backupCacheFile, muntedCacheFile, itemHandler, chestArray, logger)
 
     if cacheFile == nil or fs.exists(cacheFile) == false or fs.isDir(cacheFile) then
         return Err("cacheFile must be a file path")
@@ -218,23 +219,22 @@ local function new(cacheFile, backupCacheFile, muntedCacheFile, itemHandler, che
         return Err("muntedCacheFile must be a string")
     end
 
-    local nc = setmetatable(
-        {
-            names = {},
-            cacheFile = cacheFile,
-            backupCacheFile = backupCacheFile,
-            itemHandler = itemHandler,
-            chestArray = chestArray,
-            logger = logger
-        },
+    inp = setmetatable(
+        inp,
         NameStackCacheMetatable
     )
+    inp.names = {}
+    inp.cacheFile = cacheFile
+    inp.backupCacheFile = backupCacheFile
+    inp.itemHandler = itemHandler
+    inp.chestArray = chestArray
+    inp.logger = logger
 
-    local deserialiseRes = nc:importFromFile(cacheFile)
+    local deserialiseRes = inp:importFromFile(cacheFile)
     if deserialiseRes:is_err() then
         logger:e("Failed to read main cache file due to error: '"..deserialiseRes:unwrap_err(logger).."'")
         -- try backup
-        local backupDeserialiseRes = nc:importFromFile(backupCacheFile)
+        local backupDeserialiseRes = inp:importFromFile(backupCacheFile)
         if backupDeserialiseRes:is_err() then
             logger:e("Failed to read both cache files")
             return Err("Failed to read main cache file because '"..deserialiseRes:unwrap_err(logger).."' and failed to read backup cahce file because '"..backupDeserialiseRes:unwrap_err(logger).."'")
@@ -247,7 +247,7 @@ local function new(cacheFile, backupCacheFile, muntedCacheFile, itemHandler, che
         end
     end
 
-    return Ok(nc)
+    return Ok(inp)
 end
 
-return { new = new }
+return { new_inplace = new_inplace }
