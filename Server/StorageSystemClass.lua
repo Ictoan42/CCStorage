@@ -11,9 +11,6 @@ local pr = require("cc.pretty")
 local prp = pr.pretty_print
 Ok, Err, Try = Result.Ok, Result.Err, Result.Try
 
---TODO:
---add function to find how much space the system has left total
-
 --- @class StorageSystem
 --- @field logger Logger
 --- @field confFile ConfigFile
@@ -62,11 +59,14 @@ function StorageSystem:list(liteMode)
     return self.chestArray:list(liteMode)
 end
 
---- @param getRegistration? boolean
---- @return Result
+--- @param getReg? boolean whether to include item registration data
+--- @param getDisplayName? boolean
+--- @param getMaxCount? boolean
+--- @param getSpace? boolean
+--- @return Result table
 --- Passthrough to ChestArray:sortedList()
-function StorageSystem:organisedList(getRegistration)
-    return self.chestArray:sortedList(getRegistration)
+function StorageSystem:organisedList(getReg, getMaxCount, getDisplayName, getSpace)
+    return self.chestArray:sortedList(getReg, getMaxCount, getDisplayName, getSpace)
 end
 
 --- @param itemID string
@@ -346,6 +346,8 @@ local function new(confFilePath)
         chestArray = ChestArray.new(
             chests,
             sortingList,
+            nameCache,
+            itemHandler,
             logger
         ):unwrap(logger)
 
@@ -355,7 +357,8 @@ local function new(confFilePath)
     -- INIT ITEMHANDLER
     ---------------
     do
-        itemHandler = ItemHandler.new(
+        itemHandler = ItemHandler.new_inplace(
+            itemHandler,
             chestArray,
             sortingList,
             nameCache,

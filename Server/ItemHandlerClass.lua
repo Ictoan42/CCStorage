@@ -548,7 +548,7 @@ function itemSorter:getAllItemSpaces()
                 if spaceR:is_ok() then
                     spaces[item.name] = spaceR:unwrap()
                 else
-                    self.logger:e("Couldn't get space for item "..item.name..": "..spaceR:unwrap_err())
+                    self.logger:i("Couldn't get space for item "..item.name..": "..spaceR:unwrap_err())
                 end
             end
 
@@ -662,22 +662,22 @@ local itemSorterMetatable = {
     __index = itemSorter,
 }
 
+--- @param inp table empty table to convert to ItemHandler
 --- @param chestArray ChestArray
 --- @param sortingList SortingList
 --- @param cache NameStackCache
 --- @param logger Logger
 --- @return ItemHandler
 --- Creates a new ItemHandler
-local function new(chestArray, sortingList, cache, logger)
+local function new_inplace(inp, chestArray, sortingList, cache, logger)
+    inp.chestArray = chestArray
+    inp.sortingList = sortingList
+    inp.cache = cache
+    inp.logger = logger
     return setmetatable(
-        {
-            chestArray = chestArray,
-            sortingList = sortingList,
-            cache = cache,
-            logger = logger
-        },
+        inp,
         itemSorterMetatable
     )
 end
 
-return { new = new }
+return { new_inplace = new_inplace }

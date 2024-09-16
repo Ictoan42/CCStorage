@@ -31,7 +31,7 @@ end
 
 function ItemCountWatcher:requestList()
 
-    self.rssObj:organisedList(true)
+    self.rssObj:organisedList(true, true, true, true)
 
 end
 
@@ -44,8 +44,9 @@ function ItemCountWatcher:handleListResponse(evIn)
 
     res:handle(
         function(val)
-            self.list = val
-            self.rssObj:getCacheTable()
+            self:draw(val)
+            -- self.list = val
+            -- self.rssObj:getCacheTable()
         end,
         function(err)
             print("Failed to parse response to list request: "..err)
@@ -86,36 +87,29 @@ function ItemCountWatcher:handleSpacesResponse(evIn)
     )
 end
 
---- @param itemsList table from rss:organisedList(true)
---- @param cacheTable table from rss:getCacheTable()
---- @param spacesTable table from rss:getAllItemSpaces()
-function ItemCountWatcher:draw(itemsList, cacheTable, spacesTable)
+--- @param itemsList table from rss:organisedList(true, true, true)
+function ItemCountWatcher:draw(itemsList)
 
-    -- itemsList is an argument to pass in a premade list from rss:organisedList(true)
+    -- itemsList is an argument to pass in a premade list from rss:organisedList(true, true, true)
 
     local items = itemsList
 
-    -- transform into array where entries are in format {count, name, regStatus}
-    local sortedList = {}
+    -- filter out desired items
+    local filteredList = {}
+    for itemID, itemInfo in pairs(items) do
+        if self.unregOnly then
+            if itemInfo.reg[1] == nil then
+                filteredList[itemID] = itemInfo
+            end
+        else
+            filteredList[itemID] = itemInfo
+        end
+    end
+
+    -- find how many items there are total
     local totalItemCount = 0
-    for k, v in pairs(items) do
-
-        if type(v) ~= "table" then
-            -- organisedList was called by a different client without requesting
-            -- reg info, we should ignore this call
-            return
-        end
-
-        local formToStore = {v[1], k, v["regStatus"]}
-
-        if self.unregOnly and v["regStatus"] == false then
-            table.insert(sortedList, formToStore)
-            totalItemCount = totalItemCount + v[1]
-        elseif self.unregOnly == false then
-            table.insert(sortedList, formToStore)
-            totalItemCount = totalItemCount + v[1]
-        end
-
+    for itemID, itemInfo in pairs(filteredList) do
+        totalItemCount = totalItemCount + itemInfo.count
     end
 
     self.win:clear(true)
@@ -135,43 +129,37 @@ function ItemCountWatcher:draw(itemsList, cacheTable, spacesTable)
         return
     end
 
+    -- create copy in a sortable format
+    local sortedList = {}
+    for itemID, itemInfo in pairs(filteredList) do
+        itemInfo[1] = itemID
+        table.insert(sortedList,
+            itemInfo
+        )
+    end
+
     -- sort in order of count
     table.sort(
         sortedList,
         function(a1, a2)
-            return a1[1] > a2[1]
+            return a1.count > a2.count
         end
     )
 
-    --local maxNumLength = math.max(
-    --    string.len(sortedList[1][1]),
-    --    string.len("Count")
-    --)
+    -- require("cc.pretty").pretty_print(sortedList)
+    -- do return end
+
     local maxNumLength = 0
     if self.stackMultiple then
         -- biggest number no longer guarantees longest string, so we need to be more sophisticated
 
-        -- {count, name, regStatus}
-        for k, v in pairs(sortedList) do
-            local len = stackMultiple(v[1], cacheTable[v[2]][2]):len()
+        for k, item in pairs(sortedList) do
+            local len = stackMultiple(item.count, item.maxCount or 64):len()
             maxNumLength = math.max(maxNumLength, len)
         end
-
-        -- maxNumLength = string.len(stackMultiple(
-        --     sortedList[1][1],
-        --     cacheTable[sortedList[1][2]][2]
-        -- ))
     else
-        maxNumLength = string.len(sortedList[1][1])
-        -- maxNumLength = ("%d/%d"):format(
-        --     sortedList[1][1],
-        --     spacesTable[sortedList[1][2]]
-        -- ):len()
+        maxNumLength = string.len(sortedList[1].count)
     end
-
-    --self.win:print(
-    --    ccs.ensure_width("Count", maxNumLength) .. " - " .. "Name"
-    --)
 
     local maxNameLength = self.win.width - (maxNumLength + string.len(" - "))
 
@@ -179,28 +167,25 @@ function ItemCountWatcher:draw(itemsList, cacheTable, spacesTable)
     local yOffset = 2
 
     for y=1, math.min(self.win.height, #sortedList) do
+        local item = sortedList[y]
         self.win:setCursorPos(1, y + yOffset)
         local c
         if self.stackMultiple then
             local format = stackMultiple(
-                sortedList[y][1],
-                cacheTable[sortedList[y][2]][2]
+                item.count,
+                item.maxCount or 64
             )
             local padLen = maxNumLength - format:len()
             local padding = (" "):rep(padLen)
             c = padding..format
         else
-            -- c = ccs.ensure_width(("%d/%d"):format(
-            --     sortedList[y][1],
-            --     spacesTable[sortedList[y][2]]
-            -- ), maxNumLength)
-            c = ccs.ensure_width(tostring(sortedList[y][1]), maxNumLength)
+            c = ccs.ensure_width(tostring(item.count), maxNumLength)
         end
         local n
-        if cacheTable[sortedList[y][2]] ~= nil then
-            n = cacheTable[sortedList[y][2]][1]
+        if item.displayName ~= nil then
+            n = item.displayName
         else
-            n = tostring(sortedList[y][2])
+            n = tostring(item[1])
         end
         local n2 = n:sub(1, math.min(n:len(), maxNameLength - 4))
 
@@ -208,18 +193,18 @@ function ItemCountWatcher:draw(itemsList, cacheTable, spacesTable)
             n2 = n2 .. ".."
         end
 
-        -- if this item is unregistered
-        if sortedList[y][3] == false then
+        -- if this item is unregistered or misplaced
+        if item.reg[2] == false then
             local oldCol = self.win:getTextColour()
             self.win:write(c .. " - ")
             self.win:setTextColour(colours.red)
             self.win:write(n2)
             self.win:setTextColour(oldCol)
-        elseif spacesTable[sortedList[y][2]] then
-            local space = spacesTable[sortedList[y][2]]
-            local maxNum = sortedList[y][1] + space
+        elseif item.space then
+            local space = item.space[1]
             -- between 0 and 1
-            local percent = sortedList[y][1] / maxNum
+            local numItems = item.space[2] - item.space[1]
+            local percent = numItems / item.space[2]
             local oldCol = self.win:getTextColour()
             if percent == 1 then
                 self.win:setTextColour(colours.red)
@@ -262,8 +247,8 @@ function ItemCountWatcher:setupButtons()
     self.win:addButton(
         "stackMultiple",
         "S",
-        self.win.width - 13,
-        1,
+        self.win.width - 7,
+        5,
         5,
         3,
         colours.red,

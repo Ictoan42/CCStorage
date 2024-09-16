@@ -99,14 +99,27 @@ function RemoteStorageSystem:getAllItemSpaces()
     return self:sendReq({"getAllItemSpaces"})
 end
 
---- @param getRegistration? boolean whether to include item registration data
---- @return Result
---- Returns a list of every item in the system. Format is
---- a table where t.itemID = { itemCount, ["reg"] = "destination"|nil }
---- OR if getRegistration is false or nil, then the return table
---- is in the format t.itemID = itemCount
-function RemoteStorageSystem:organisedList(getRegistration)
-    return self:sendReq({"organisedList", getRegistration})
+--- @param getReg? boolean whether to include item registration data
+--- @param getDisplayName? boolean
+--- @param getMaxCount? boolean
+--- @param getSpace? boolean
+--- @return Result table
+--- Get a list of every item in the system.
+---
+--- Return format:
+--- ```
+--- {
+---   ["minecraft:grass_block"] = {
+---     ["count"] = integer,
+---     ["reg"] = {"destinationPeriphID"|nil, isCorrectBool}, -- only if getReg == true
+---     ["maxCount"] = integer, -- only if getMaxCount == true AND item is registered
+---     ["displayName"] = "Display Name"|nil, -- only if getDisplayName == true AND item is registered
+---     ["space"] = {spaceLeftInt, chestCapacityInt}, -- only if getSpace == true AND item is registered
+---   },
+--- }
+--- ```
+function RemoteStorageSystem:organisedList(getReg, getMaxCount, getDisplayName, getSpace)
+    return self:sendReq({"organisedList", getReg, getMaxCount, getDisplayName, getSpace})
 end
 
 --- @param itemID string

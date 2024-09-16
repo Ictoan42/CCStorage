@@ -8,6 +8,8 @@ local Ok, Err, Try = R.Ok, R.Err, R.Try
 --- @class ChestArray
 --- @field chests table
 --- @field sortingList SortingList
+--- @field nameCache NameStackCache
+--- @field itemHandler ItemHandler
 --- @field chestSizes table
 --- @field logger Logger
 local chestArray = {}
@@ -101,74 +103,115 @@ function chestArray:list(liteMode)
     return Ok(arrOut)
 end
 
---- @param getRegistration? boolean whether to include item registration data
+--- @param getReg? boolean whether to include item registration data
+--- @param getDisplayName? boolean
+--- @param getMaxCount? boolean
+--- @param getSpace? boolean
 --- @return Result table
 --- Get a list of every item in the system.
 ---
---- Return format IF getRegistration == false
---- ```
---- {
----   ["minecraft:grass_block"] = 27,
----   ["minecraft:stone"] = 75
---- }
---- ```
----
---- Return format IF getRegistration == true:
+--- Return format:
 --- ```
 --- {
 ---   ["minecraft:grass_block"] = {
----     itemCount,
----     ["reg"] = "destination"|nil, -- chest this item is registered to, if it is registered
----     ["regStatus"] = boolean -- if all instances of this item are in the right chest
----   }
+---     ["count"] = integer,
+---     ["reg"] = {"destinationPeriphID"|nil, isCorrectBool}, -- only if getReg == true
+---     ["maxCount"] = integer, -- only if getMaxCount == true AND item is registered
+---     ["displayName"] = "Display Name"|nil, -- only if getDisplayName == true AND item is registered
+---     ["space"] = {spaceLeftInt, chestCapacityInt}, -- only if getSpace == true AND item is registered
+---   },
 --- }
 --- ```
-function chestArray:sortedList(getRegistration)
+function chestArray:sortedList(getReg, getMaxCount, getDisplayName, getSpace)
 
-    self.logger:d("ChestArray executing method sortedList with getRegistration: "..tostring(getRegistration))
-
-    getRegistration = getRegistration or false
+    getReg = getReg or false
+    getMaxCount = getMaxCount or false
+    getDisplayName = getDisplayName or false
+    getSpace = getSpace or false
 
     local arrOut = {}
-    local arrIn
-    local ret = self:list()
-    if ret:is_ok() then
-        arrIn = ret:unwrap()
+    local itemList
+    local listR = self:list()
+    if listR:is_ok() then
+        itemList = listR:unwrap()
     else
-        return ret
+        return listR
     end
 
-    for i=1, #arrIn do -- iterate over every chest
-        for k, v in pairs(arrIn[i]) do -- iterate over every item in the chest
-            if k ~= "chestName" and k ~= "chestSize" then -- do not iterate over the special entries
-                if v ~= nil then -- if there is an item here
-                    local itemName = v["name"]
-                    if arrOut[itemName] == nil then -- if this items has not been encountered yet
+    local cache = self.nameCache:getDict()
 
-                        if not getRegistration then
-                            arrOut[itemName] = v["count"] -- set this item's entry to the count of the currently iterated upon stack
-                        else
-                            arrOut[itemName] = {v["count"]}
-                            arrOut[itemName]["reg"] = self.sortingList:getDest(itemName)
-                            arrOut[itemName]["regStatus"] =
-                                (arrIn[i]["chestName"] == self.sortingList:getDest(itemName))
-                        end
+    local spaces
+    if getSpace then
+        local spacesR = self.itemHandler:getAllItemSpaces()
+        if spacesR:is_ok() then spaces = spacesR:unwrap()
+        else return spacesR end
+    end
 
-                    else -- if this item has been encountered before
+    for k1, chestContents in pairs(itemList) do
+        local chestName = chestContents.chestName
+        local chestSize = chestContents.chestSize
+        for slot, item in pairs(chestContents) do -- iterate over every item in the chest
+            if type(slot) == "string" then
+                goto continue
+            end
+            local itemName = item.name
+            if arrOut[itemName] == nil then -- if this items has not been encountered yet
 
-                        if not getRegistration then
-                            arrOut[itemName] = arrOut[itemName] + v["count"] -- add the count of the current stack to the existing entry
-                        else
-                            arrOut[itemName][1] = arrOut[itemName][1] + v["count"]
-                            arrOut[itemName]["regStatus"] =
-                                arrOut[itemName]["regStatus"]
-                                    and
-                                (arrIn[i]["chestName"] == self.sortingList:getDest(itemName))
-                        end
+                local thisItem = {}
 
+                thisItem.count = item.count
+
+                if getReg then
+                    local dest = self.sortingList:getDest(itemName)
+                    local isCorrect = (chestName == self.sortingList:getDest(itemName))
+                    thisItem.reg = {dest, isCorrect}
+                end
+
+                if getMaxCount then
+                    local itemCache = cache[itemName]
+                    local maxCount
+                    if itemCache ~= nil then
+                        maxCount = itemCache[2]
+                    else
+                        maxCount = nil
+                    end
+                    thisItem.maxCount = maxCount
+                end
+
+                if getDisplayName then
+                    local itemCache = cache[itemName]
+                    local displayName
+                    if itemCache ~= nil then
+                        displayName = itemCache[1]
+                    else
+                        displayName = nil
+                    end
+                    thisItem.displayName = displayName
+                end
+
+                if getSpace then
+                    local spaceLeft = spaces[itemName]
+                    local itemCache = cache[itemName]
+                    if spaceLeft ~= nil and itemCache ~= nil then
+                        thisItem.space = {spaceLeft, chestSize*itemCache[2]}
                     end
                 end
+
+                arrOut[itemName] = thisItem
+
+            else -- if this item has been encountered before
+
+                arrOut[itemName].count = arrOut[itemName].count + item.count
+
+                if getReg then
+                    arrOut[itemName].reg[2] =
+                        arrOut[itemName].reg[2]
+                            and
+                        (chestName == self.sortingList:getDest(itemName))
+                end
+
             end
+            ::continue::
         end
     end
 
@@ -181,10 +224,12 @@ local CAmetatable = {
 
 --- @param chestArr table array of chest ID string, e.g. "minecraft:chest_17"
 --- @param sortingList SortingList
+--- @param nameCache NameStackCache
+--- @param itemHandler ItemHandler
 --- @param logger Logger
 --- @return Result ChestArray
 --- Create a new ChestArray object.
-local function new(chestArr, sortingList, logger)
+local function new(chestArr, sortingList, nameCache, itemHandler, logger)
 
     -- safety check
     if #chestArr == 0 then
@@ -216,6 +261,8 @@ local function new(chestArr, sortingList, logger)
         chests = chestArr,
         sortingList = sortingList,
         chestSizes = chestSizesTable,
+        nameCache = nameCache,
+        itemHandler = itemHandler,
         logger = logger
     }, CAmetatable))
 end
