@@ -9,7 +9,7 @@ local ccs = require("cc.strings")
 --- @field rssObj RemoteStorageSystem
 --- @field sw StatusWindow
 --- @field unregOnly boolean
---- @field nameTable table
+--- @field cacheTable table
 --- @field list table
 local ItemCountWatcher = {}
 
@@ -32,7 +32,7 @@ function ItemCountWatcher:handleListResponse(evIn)
     res:handle(
         function(val)
             self.list = val
-            self.rssObj:getDisplayNameTable()
+            self.rssObj:getCacheTable()
         end,
         function(err)
             print("Failed to parse response to list request: "..err)
@@ -42,15 +42,15 @@ function ItemCountWatcher:handleListResponse(evIn)
 end
 
 --- @param evIn table a modem message
-function ItemCountWatcher:handleNamesResponse(evIn)
+function ItemCountWatcher:handleCacheResponse(evIn)
 
     --- @type Result
     local res = evIn[1]
 
     res:handle(
         function(val)
-            self.nameTable = val
-            self:draw(self.list, self.nameTable)
+            self.cacheTable = val
+            self:draw(self.list, self.cacheTable)
         end,
         function(err)
             print("Failed to parse name table response: "..err)
@@ -59,8 +59,8 @@ function ItemCountWatcher:handleNamesResponse(evIn)
 end
 
 --- @param itemsList table from rss:organisedList(true)
---- @param nameTable table from rss:getDisplayNameTable()
-function ItemCountWatcher:draw(itemsList, nameTable)
+--- @param cacheTable table from rss:getCacheTable()
+function ItemCountWatcher:draw(itemsList, cacheTable)
 
     -- itemsList is an argument to pass in a premade list from rss:organisedList(true)
 
@@ -133,8 +133,8 @@ function ItemCountWatcher:draw(itemsList, nameTable)
         self.win:setCursorPos(1, y + yOffset)
         local c = ccs.ensure_width(tostring(sortedList[y][1]), maxNumLength)
         local n
-        if nameTable[sortedList[y][2]] ~= nil then
-            n = nameTable[sortedList[y][2]]
+        if cacheTable[sortedList[y][2]] ~= nil then
+            n = cacheTable[sortedList[y][2]][1]
         else
             n = tostring(sortedList[y][2])
         end

@@ -61,21 +61,36 @@ function RemoteStorageSystem:getDisplayName(itemName)
     return self:sendReq({"getDisplayName", itemName})
 end
 
+--- @param itemName string
+--- @return Result integer Err if the item isn't in the system or cache
+--- Gets the stack size of an item
+function RemoteStorageSystem:getStackSize(itemName)
+    return self:sendReq({"getStackSize", itemName})
+end
+
 --- @return table
 --- Return format:
 --- ```
 --- {
----   ["itemID"] = "Display Name"
+---   ["itemID"] = {"Display Name", stackSizeInt}
 --- }
 --- ```
-function RemoteStorageSystem:getDisplayNameTable()
-    return self:sendReq({"getDisplayNameTable"})
+function RemoteStorageSystem:getCacheTable()
+    return self:sendReq({"getCacheTable"})
 end
 
 --- @return Result nil
 --- Get the display names of every item in the system
 function RemoteStorageSystem:cacheAllNames()
     return self:sendReq({"cacheAllNames"})
+end
+
+--- @param itemID string
+--- @return Result integer
+--- Find the number of this items that could still be placed into the system before running out of space.
+--- Makes multiple peripheral calls, don't loop.
+function RemoteStorageSystem:getItemSpace(itemID)
+    return self:sendReq({"getItemSpace", itemID})
 end
 
 --- @param getRegistration? boolean whether to include item registration data

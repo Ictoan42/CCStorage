@@ -2,31 +2,31 @@ local R = require("/CCStorage.Common.ResultClass")
 local EU = require("/CCStorage.Common.ExecUtils")
 local Ok, Err = R.Ok, R.Err
 
---- @class NameCache
---- @field names table ["itemID"] = "Display name"
+--- @class NameStackCache
+--- @field cache table ["itemID"] = {"Display name", stackSizeInt}
 --- @field cacheFile string
 --- @field backupCacheFile string
 --- @field itemHandler ItemHandler
 --- @field chestArray ChestArray
 --- @field logger Logger
-local NameCache = {}
+local NameStackCache = {}
 
-local NameCacheMetatable = {
-    __index = NameCache
+local NameStackCacheMetatable = {
+    __index = NameStackCache
 }
 
 --- @return string
 --- Serialises the current list into a string
---- Format: modid:itemid 'Display Name'
-function NameCache:serialise()
+--- Format: modid:itemid 'Display Name' stackSize
+function NameStackCache:serialise()
     local out = ""
-    for k, v in pairs(self.names) do
-        out = out .. k .. " '" .. v .. "'\n"
+    for k, v in pairs(self.cache) do
+        out = out .. k .. " '" .. v[1] .. "' "..v[2].."\n"
     end
     return out
 end
 
-function NameCache:saveToFile()
+function NameStackCache:saveToFile()
     fs.delete(self.backupCacheFile)
     fs.copy(self.cacheFile, self.backupCacheFile)
 
@@ -44,8 +44,8 @@ end
 --- @param inp string
 --- @return Result nil
 --- Deserialises the cache from the given string
---- Format: modid:itemid 'Display Name'
-function NameCache:deserialise(inp)
+--- Format: modid:itemid 'Display Name' stackSize
+function NameStackCache:deserialise(inp)
     -- string is the same format as is output by :serialise()
 
     local arrOut = {}
@@ -58,23 +58,27 @@ function NameCache:deserialise(inp)
     for entry in inp:gmatch("([^\n]+)") do
 
         -- I LOVE REGEX
-        local itemName, displayName = entry:match("(.+) '(.+)'")
+        local itemName, displayName, stackSize = entry:match("(.+) '(.+)' (.+)")
 
         if itemName == nil or displayName == nil then
             return Err("Malformed line "..linenum)
         end
-        arrOut[itemName] = displayName
+        local stackSizeInt = tonumber(stackSize)
+        if stackSizeInt == nil then
+            return Err("Malformed line "..linenum..", '"..stackSize.."' is not a valid integer")
+        end
+        arrOut[itemName] = {displayName, stackSizeInt}
         linenum = linenum + 1
     end
 
-    self.names = arrOut
+    self.cache = arrOut
 
     return Ok()
 end
 
 --- @param inp string filepath
 --- @return Result nil
-function NameCache:importFromFile(inp)
+function NameStackCache:importFromFile(inp)
     local f, err = fs.open(inp, "r")
     if f == nil then
         return Err("Couldn't open file: "..err)
@@ -91,16 +95,36 @@ end
 
 --- @param itemID string
 --- @return Result string
-function NameCache:getDisplayName(itemID)
-    if self.names[itemID] ~= nil then
-        return Ok(self.names[itemID])
+function NameStackCache:getDisplayName(itemID)
+    if self.cache[itemID] ~= nil then
+        return Ok(self.cache[itemID][1])
     else
         local res = self.itemHandler:getItemDetail(itemID):map(
             function(detail)
-                self.names[itemID] = detail.displayName
+                self.cache[itemID] = {detail.displayName, detail.maxCount}
                 self.logger:d("Saving nameCache to file")
                 self:saveToFile()
                 return detail.displayName
+            end
+        )
+        return res
+    end
+
+end
+
+--- @param itemID string
+--- @return Result string
+function NameStackCache:getStackSize(itemID)
+    if self.cache[itemID] ~= nil then
+        require("cc.pretty").pretty_print(self.cache[itemID])
+        return Ok(self.cache[itemID][2])
+    else
+        local res = self.itemHandler:getItemDetail(itemID):map(
+            function(detail)
+                self.cache[itemID] = {detail.displayName, detail.maxCount}
+                self.logger:d("Saving nameCache to file")
+                self:saveToFile()
+                return detail.maxCount
             end
         )
         return res
@@ -112,16 +136,16 @@ end
 --- Get the current cache contents. Format:
 --- ```
 --- {
----   ["itemID"] = "Display Name"
+---   ["itemID"] = {"Display Name", stackSizeInt}
 --- }
 --- ```
-function NameCache:getDict()
-    return self.names
+function NameStackCache:getDict()
+    return self.cache
 end
 
---- Get the display names of every item in the system
+--- Get the display names and stacks sizes of every item in the system
 --- @return Result nil
-function NameCache:cacheAllNames()
+function NameStackCache:cacheAll()
 
     local listRes = self.chestArray:list()
     local list
@@ -144,7 +168,7 @@ function NameCache:cacheAllNames()
                 goto continue
             end
             local itemID = item.name
-            if self.names[itemID] == nil and alreadyProcessed[itemID] == nil then
+            if self.cache[itemID] == nil and alreadyProcessed[itemID] == nil then
                 -- we don't have this one, get it
                 local chPeriphRes = Try(peripheral.wrap(chestName),"Peripheral '"..chestName.."' does not exist")
                 local chPeriph
@@ -157,7 +181,7 @@ function NameCache:cacheAllNames()
                         if detail == nil then
                             self.logger:e("cacheAllNames tried to get detail of empty slot "..slot.." in chest "..chestName)
                         else
-                            self.names[itemID] = detail.displayName
+                            self.cache[itemID] = {detail.displayName, detail.maxCount}
                         end
                     end
                 )
@@ -180,8 +204,8 @@ end
 --- @param muntedCacheFile string
 --- @param itemHandler ItemHandler
 --- @param logger Logger
---- @return Result NameCache
---- Create a new NameCache
+--- @return Result NameStackCache
+--- Create a new NameStackCache
 local function new(cacheFile, backupCacheFile, muntedCacheFile, itemHandler, chestArray, logger)
 
     if cacheFile == nil or fs.exists(cacheFile) == false or fs.isDir(cacheFile) then
@@ -203,7 +227,7 @@ local function new(cacheFile, backupCacheFile, muntedCacheFile, itemHandler, che
             chestArray = chestArray,
             logger = logger
         },
-        NameCacheMetatable
+        NameStackCacheMetatable
     )
 
     local deserialiseRes = nc:importFromFile(cacheFile)

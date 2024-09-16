@@ -5,7 +5,7 @@ Result = require("/CCStorage.Common.ResultClass")
 ChestArray = require("/CCStorage.Server.ChestArrayClass")
 ItemHandler = require("/CCStorage.Server.ItemHandlerClass")
 SortingList = require("/CCStorage.Server.SortingListClass")
-NameCache = require("/CCStorage.Server.NameCacheClass")
+NameCache = require("/CCStorage.Server.NameStackCacheClass")
 CCLogger = require("/CCLogger") -- this file is in root
 local pr = require("cc.pretty")
 local prp = pr.pretty_print
@@ -21,7 +21,7 @@ Ok, Err, Try = Result.Ok, Result.Err, Result.Try
 --- @field chestArray ChestArray
 --- @field sortingList SortingList
 --- @field itemHandler ItemHandler
---- @field nameCache NameCache
+--- @field nameCache NameStackCache
 local StorageSystem = {}
 
 --- @param listStr string
@@ -91,16 +91,23 @@ function StorageSystem:getDisplayName(itemID)
     return self.nameCache:getDisplayName(itemID)
 end
 
+--- @param itemID string
+--- @return Result integer
+--- Passthrough to NameCache:getStackSize
+function StorageSystem:getStackSize(itemID)
+    return self.nameCache:getStackSize(itemID)
+end
+
 --- @return Result table
 --- Passthrough to NameCache:getDict
-function StorageSystem:getDisplayNameTable()
+function StorageSystem:getCacheTable()
     return Ok(self.nameCache:getDict())
 end
 
 --- @return Result nil
 --- Passthrough to NameCache:cacheAllNames
 function StorageSystem:cacheAllNames()
-    return self.nameCache:cacheAllNames()
+    return self.nameCache:cacheAll()
 end
 
 --- @param inputChestID string
@@ -148,7 +155,7 @@ function StorageSystem:detectAndRegisterItems()
         else itemsRegistered = itemsRegistered + 1 end
     end
 
-    local cRes = self.nameCache:cacheAllNames()
+    local cRes = self.nameCache:cacheAll()
     if cRes:is_err() then
         self.logger:e("Failed to cache names after registering: "..cRes:unwrap_err(self.logger))
     end
@@ -169,6 +176,13 @@ end
 --- Passthrough to SortingList:removeDest()
 function StorageSystem:forgetItem(itemID)
     return self.sortingList:removeDest(itemID)
+end
+
+--- @param itemID string
+--- @return Result integer
+--- Passthrough to ItemHandler:getItemSpace
+function StorageSystem:getItemSpace(itemID)
+    return self.itemHandler:getItemSpace(itemID)
 end
 
 --- @param dumpChest string
