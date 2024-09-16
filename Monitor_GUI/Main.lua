@@ -108,13 +108,14 @@ local function main(confFilePath)
     local wm = WM.new(mon)
 
     local inputChest = Config.inputChest
+    local dumpChest = Config.dumpChest or inputChest
 
     local statusWindow = SW.new(wm, rss, "statusWindow", 2, 2, mX - 25, 10, colours.lightGrey, colours.black, colours.grey)
     if type(statusWindow) == "boolean" then return end
-    statusWindow:setMessage({"Status: Idle"})
+    statusWindow:setMessage({"Idle"})
     statusWindow:render()
 
-    local mainButtonPanel = MBP.new(wm, rss, "mainButtonPanel", mX - 21, 2, 20, mY-2, colours.lightGrey, colours.black, colours.grey, statusWindow, inputChest)
+    local mainButtonPanel = MBP.new(wm, rss, "mainButtonPanel", mX - 21, 2, 20, mY-2, colours.lightGrey, colours.black, colours.grey, statusWindow, inputChest, dumpChest)
     if type(mainButtonPanel) == "boolean" then return end
     mainButtonPanel:draw2()
 

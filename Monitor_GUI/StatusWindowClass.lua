@@ -100,10 +100,6 @@ local function new(winManObj, rssObj, name, x, y, w, h, bgcol, fgcol, bordercol)
         StatusWindowMetatable
     )
 
-    sw:setMessage({"Status: Idle"})
-
-    sw:render()
-
     return sw
 
 end

@@ -5,6 +5,7 @@
 --- @field rssObj RemoteStorageSystem
 --- @field sw StatusWindow
 --- @field inputChestID string
+--- @field dumpChestID string
 --- @field unregMoved Result|nil
 local MainButtonPanel = {}
 
@@ -44,11 +45,11 @@ function MainButtonPanel:init()
 end
 
 function MainButtonPanel:cleanUnreg()
-    self.rssObj:cleanUnregisteredItems(self.inputChestID)
+    self.rssObj:cleanUnregisteredItems(self.dumpChestID)
 end
 
 function MainButtonPanel:cleanMisplaced()
-    self.rssObj:cleanMisplacedItems(self.inputChestID)
+    self.rssObj:cleanMisplacedItems(self.dumpChestID)
 end
 
 function MainButtonPanel:cleanUnregisteredHandler(response)
@@ -69,7 +70,7 @@ function MainButtonPanel:cleanMisplacedHandler(response)
     if self.unregMoved ~= nil and self.unregMoved:is_ok() then
         local unregMoved = self.unregMoved:unwrap()
         actuallyDidSomething = actuallyDidSomething or unregMoved > 0
-        table.insert(message, "Moved "..unregMoved.." unregistered item(s) into the input chest")
+        table.insert(message, "Moved "..unregMoved.." unregistered item(s) into the dump chest")
         table.insert(message, "")
     elseif self.unregMoved ~= nil then
         table.insert(message, "Failed to clean unregistered items due to an error:")
@@ -86,7 +87,7 @@ function MainButtonPanel:cleanMisplacedHandler(response)
         actuallyDidSomething = actuallyDidSomething or dumped > 0
         table.insert(message, "Moved "..sorted.." misplaced item(s) into their correct chests")
         table.insert(message, "")
-        table.insert(message, "Moved "..dumped.." misplaced item(s) into the input chest")
+        table.insert(message, "Moved "..dumped.." misplaced item(s) into the dump chest")
     else
         table.insert(message, "Failed to clean misplaced items due to an error:")
         table.insert(message, res:unwrap_err())
@@ -208,8 +209,9 @@ end
 --- @param bordercol ccTweaked.colors.color
 --- @param statusWindowObj StatusWindow
 --- @param inputChestID string
+--- @param dumpChestID string
 --- @return MainButtonPanel|boolean
-local function new(winManObj, rssObj, name, x, y, w, h, bgcol, fgcol, bordercol, statusWindowObj, inputChestID)
+local function new(winManObj, rssObj, name, x, y, w, h, bgcol, fgcol, bordercol, statusWindowObj, inputChestID, dumpChestID)
 
     local mbp = {}
 
@@ -222,6 +224,7 @@ local function new(winManObj, rssObj, name, x, y, w, h, bgcol, fgcol, bordercol,
     mbp.sw = statusWindowObj
 
     mbp.inputChestID = inputChestID
+    mbp.dumpChestID = dumpChestID
 
     mbp = setmetatable(
         mbp,
