@@ -353,6 +353,7 @@ local function new(confFilePath)
         itemHandler = ItemHandler.new(
             chestArray,
             sortingList,
+            nameCache,
             logger
         )
     end

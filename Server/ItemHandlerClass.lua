@@ -15,6 +15,7 @@ local PRP = require("cc.pretty").pretty_print
 --- @class ItemHandler
 --- @field chestArray ChestArray
 --- @field sortingList SortingList
+--- @field cache NameStackCache
 --- @field logger Logger
 local itemSorter = {}
 
@@ -437,7 +438,7 @@ function itemSorter:findItems(itemName)
     return Ok(arrOut)
 end
 
---- @param itemName any
+--- @param itemName string
 --- @return Result table Err if the item isn't in the system
 --- Returns the same as getItemDetail() but takes an item ID as input.
 function itemSorter:getItemDetail(itemName)
@@ -468,6 +469,43 @@ function itemSorter:getItemDetail(itemName)
     local itemDetailRes = Try(chPeriph.getItemDetail(itemLoc[2]), "No item in slot "..itemLoc[2])
     return itemDetailRes
 
+end
+
+--- @param itemName string
+--- @return Result integer
+--- Find the number of this items that could still be placed into the system before running out of space.
+--- Makes multiple peripheral calls, don't loop.
+function itemSorter:getItemSpace(itemName)
+    local dest = self.sortingList:getDest(itemName)
+    if dest == nil then return Err("Item "..itemName.." is not registered") end
+
+    local chPeriph
+    local chPeriphRes = Try(peripheral.wrap(dest), "Peripheral "..dest.." does not exist")
+    if chPeriphRes:is_ok() then
+        chPeriph = chPeriphRes:unwrap()
+    else return chPeriphRes end
+
+    local list = chPeriph.list()
+    local size = chPeriph.size()
+
+    local stackSize
+    local stackSizeRes = self.cache:getStackSize(itemName)
+    if stackSizeRes:is_ok() then stackSize = stackSizeRes:unwrap()
+    else return stackSizeRes end
+
+    local space = 0
+    local slotsChecked = 0
+    for k, v in pairs(list) do
+        slotsChecked = slotsChecked + 1
+        if v.name == itemName then
+            space = space + (stackSize - v.count)
+        end
+    end
+
+    local emptySlots = size - slotsChecked
+    space = space + (stackSize * emptySlots)
+
+    return Ok(space)
 end
 
 --- @param itemName string item ID
@@ -575,14 +613,16 @@ local itemSorterMetatable = {
 
 --- @param chestArray ChestArray
 --- @param sortingList SortingList
+--- @param cache NameStackCache
 --- @param logger Logger
 --- @return ItemHandler
 --- Creates a new ItemHandler
-local function new(chestArray, sortingList, logger)
+local function new(chestArray, sortingList, cache, logger)
     return setmetatable(
         {
             chestArray = chestArray,
             sortingList = sortingList,
+            cache = cache,
             logger = logger
         },
         itemSorterMetatable
