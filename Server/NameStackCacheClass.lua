@@ -116,7 +116,6 @@ end
 --- @return Result string
 function NameStackCache:getStackSize(itemID)
     if self.cache[itemID] ~= nil then
-        require("cc.pretty").pretty_print(self.cache[itemID])
         return Ok(self.cache[itemID][2])
     else
         local res = self.itemHandler:getItemDetail(itemID):map(

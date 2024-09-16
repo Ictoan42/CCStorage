@@ -472,21 +472,31 @@ function itemSorter:getItemDetail(itemName)
 end
 
 --- @param itemName string
+--- @param chList table|nil the output of chest.list() for the registered chest, useable as a shortcut to skip a peripheral call
+--- @param chSize table|nil the output of chest.size() to be used in the same scenario
 --- @return Result integer
 --- Find the number of this items that could still be placed into the system before running out of space.
---- Makes multiple peripheral calls, don't loop.
-function itemSorter:getItemSpace(itemName)
+--- Performace concerns: if not passed chList and chSize, runs multiple peripheral calls per use. if passed both, then makes either 0 calls (if item is in cache) or a SHIT TON (but only the first time)
+function itemSorter:getItemSpace(itemName, chList, chSize)
     local dest = self.sortingList:getDest(itemName)
     if dest == nil then return Err("Item "..itemName.." is not registered") end
 
-    local chPeriph
-    local chPeriphRes = Try(peripheral.wrap(dest), "Peripheral "..dest.." does not exist")
-    if chPeriphRes:is_ok() then
-        chPeriph = chPeriphRes:unwrap()
-    else return chPeriphRes end
+    local list
+    local size
 
-    local list = chPeriph.list()
-    local size = chPeriph.size()
+    if chList ~= nil and chSize ~= nil then
+        list = chList
+        size = chSize
+    else
+        local chPeriph
+        local chPeriphRes = Try(peripheral.wrap(dest), "Peripheral "..dest.." does not exist")
+        if chPeriphRes:is_ok() then
+            chPeriph = chPeriphRes:unwrap()
+        else return chPeriphRes end
+
+        list = chPeriph.list()
+        size = chPeriph.size()
+    end
 
     local stackSize
     local stackSizeRes = self.cache:getStackSize(itemName)
@@ -495,17 +505,58 @@ function itemSorter:getItemSpace(itemName)
 
     local space = 0
     local slotsChecked = 0
-    for k, v in pairs(list) do
-        slotsChecked = slotsChecked + 1
-        if v.name == itemName then
-            space = space + (stackSize - v.count)
+    for slot, item in pairs(list) do
+        if type(slot) ~= "number" then
+            goto continue
         end
+        slotsChecked = slotsChecked + 1
+        if item.name == itemName then
+            space = space + (stackSize - item.count)
+        end
+        ::continue::
     end
 
     local emptySlots = size - slotsChecked
     space = space + (stackSize * emptySlots)
 
     return Ok(space)
+end
+
+--- @return Result table ["itemID"] = spaceInt
+--- Get the space left in the system for every item
+function itemSorter:getAllItemSpaces()
+    local list
+    local listR = self.chestArray:list()
+    if listR:is_ok() then list = listR:unwrap()
+    else return listR end
+
+    -- ["itemID"] = spaceInt
+    local spaces = {}
+
+    for k1, chList in pairs(list) do
+        local chestName = chList.chestName
+        local chestSize = chList.chestSize
+        for slot, item in pairs(chList) do
+            if type(slot) == "string" then
+                -- skip "chestName" and "chestSize" entries
+                goto continue
+            end
+
+            if spaces[item.name] == nil then
+                -- we haven't done this item yet, do it now
+                local spaceR = self:getItemSpace(item.name, chList, chestSize)
+                if spaceR:is_ok() then
+                    spaces[item.name] = spaceR:unwrap()
+                else
+                    self.logger:e("Couldn't get space for item "..item.name..": "..spaceR:unwrap_err())
+                end
+            end
+
+            ::continue::
+        end
+    end
+
+    return Ok(spaces)
 end
 
 --- @param itemName string item ID

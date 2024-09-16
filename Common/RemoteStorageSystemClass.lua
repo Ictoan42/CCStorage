@@ -93,6 +93,12 @@ function RemoteStorageSystem:getItemSpace(itemID)
     return self:sendReq({"getItemSpace", itemID})
 end
 
+--- @return Result table ["itemID"] = spaceInt
+--- Get the space left in the system for every item
+function RemoteStorageSystem:getAllItemSpaces()
+    return self:sendReq({"getAllItemSpaces"})
+end
+
 --- @param getRegistration? boolean whether to include item registration data
 --- @return Result
 --- Returns a list of every item in the system. Format is

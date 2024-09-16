@@ -12,7 +12,6 @@ local prp = pr.pretty_print
 Ok, Err, Try = Result.Ok, Result.Err, Result.Try
 
 --TODO:
---add function to find how much space the system has left for any single item
 --add function to find how much space the system has left total
 
 --- @class StorageSystem
@@ -183,6 +182,12 @@ end
 --- Passthrough to ItemHandler:getItemSpace
 function StorageSystem:getItemSpace(itemID)
     return self.itemHandler:getItemSpace(itemID)
+end
+
+--- @return Result table
+--- Passthrough to ItemHandler:getAllItemSpaces
+function StorageSystem:getAllItemSpaces()
+    return self.itemHandler:getAllItemSpaces()
 end
 
 --- @param dumpChest string
