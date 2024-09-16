@@ -8,51 +8,71 @@ CF = require("/CCStorage.Common.ConfigFileClass")
 local Ok, Err = R.Ok, R.Err
 local prp = require("cc.pretty").pretty_print
 
---TODO: This should use a config file
+--- @param mbp MainButtonPanel
+--- @param icw ItemCountWatcher
+--- @param sw StatusWindow
+--- @param timerRefresh integer
+local function timerHandler(evIn, mbp, icw, sw, timerRefresh)
 
-local function timerHandler(evIn)
-
-    if not shouldSkipList then
-        ItemCounter:requestList()
+    if evIn[2] == RefreshTimerID then
+        icw:requestList()
+        RefreshTimerID = os.startTimer(timerRefresh)
+    elseif evIn[2] == IdleTimerID then
+        sw:setMessage({"Idle"})
+        sw:render()
     end
-
-    SortTimerID = os.startTimer(tonumber(Config.listRefreshInterval))
 
 end
 
-local function modemMessageHandler(evIn)
+--- @param mbp MainButtonPanel
+--- @param icw ItemCountWatcher
+--- @param defaultIdleTimer integer
+--- @param errorIdleTimer integer
+local function modemMessageHandler(evIn, mbp, icw, defaultIdleTimer, errorIdleTimer)
 
     local decoded = RSS.DecodeResponse(evIn[5]):unwrap()
 
     if decoded[2] == "sortFromInput" then
 
-        MainButtonPanel:sortHandler(decoded)
-        os.cancelTimer(SortTimerID)
-        SortTimerID = os.startTimer(0.1)
+        if mbp:sortHandler(decoded) then
+            IdleTimerID = os.startTimer(defaultIdleTimer)
+        else
+            IdleTimerID = os.startTimer(errorIdleTimer)
+        end
+        os.cancelTimer(RefreshTimerID)
+        RefreshTimerID = os.startTimer(0.1)
 
     elseif decoded[2] == "detectAndRegisterItems" then
 
-        MainButtonPanel:registerHandler(decoded)
-        os.cancelTimer(SortTimerID)
-        SortTimerID = os.startTimer(0.1)
+        if mbp:registerHandler(decoded) then
+            IdleTimerID = os.startTimer(defaultIdleTimer)
+        else
+            IdleTimerID = os.startTimer(errorIdleTimer)
+        end
+        os.cancelTimer(RefreshTimerID)
+        RefreshTimerID = os.startTimer(0.1)
 
     elseif decoded[2] == "organisedList" then
 
-        ItemCounter:handleListResponse(decoded)
+        icw:handleListResponse(decoded)
 
     elseif decoded[2] == "getCacheTable" then
 
-        ItemCounter:handleCacheResponse(decoded)
+        icw:handleCacheResponse(decoded)
 
     elseif decoded[2] == "cleanUnregisteredItems" then
 
-        MainButtonPanel:cleanUnregisteredHandler(decoded)
+        mbp:cleanUnregisteredHandler(decoded)
 
     elseif decoded[2] == "cleanMisplacedItems" then
 
-        MainButtonPanel:cleanMisplacedHandler(decoded)
-        os.cancelTimer(SortTimerID)
-        SortTimerID = os.startTimer(0.1)
+        if mbp:cleanMisplacedHandler(decoded) then
+            IdleTimerID = os.startTimer(defaultIdleTimer)
+        else
+            IdleTimerID = os.startTimer(errorIdleTimer)
+        end
+        os.cancelTimer(RefreshTimerID)
+        RefreshTimerID = os.startTimer(0.1)
 
     end
 
@@ -89,23 +109,36 @@ local function main(confFilePath)
 
     local inputChest = Config.inputChest
 
-    StatusWindow = SW.new(wm, rss, "statusWindow", 2, 2, mX - 25, 10, colours.lightGrey, colours.black, colours.grey)
-    if type(StatusWindow) == "boolean" then return end
-    StatusWindow:setMessage({"Status: Idle"})
-    StatusWindow:render()
+    local statusWindow = SW.new(wm, rss, "statusWindow", 2, 2, mX - 25, 10, colours.lightGrey, colours.black, colours.grey)
+    if type(statusWindow) == "boolean" then return end
+    statusWindow:setMessage({"Status: Idle"})
+    statusWindow:render()
 
-    MainButtonPanel = MBP.new(wm, rss, "mainButtonPanel", mX - 21, 2, 20, mY-2, colours.lightGrey, colours.black, colours.grey, StatusWindow, inputChest)
-    if type(MainButtonPanel) == "boolean" then return end
-    MainButtonPanel:draw2()
+    local mainButtonPanel = MBP.new(wm, rss, "mainButtonPanel", mX - 21, 2, 20, mY-2, colours.lightGrey, colours.black, colours.grey, statusWindow, inputChest)
+    if type(mainButtonPanel) == "boolean" then return end
+    mainButtonPanel:draw2()
 
     -- needs to be accessible from inside callbacks
-    ItemCounter = ICW.new(wm, rss, "itemCountWatcher", 2, 13, mX - 25, mY-13, colours.lightGrey, colours.black, colours.grey, StatusWindow)
-    if type(ItemCounter) == "boolean" then return end
+    local itemCounter = ICW.new(wm, rss, "itemCountWatcher", 2, 13, mX - 25, mY-13, colours.lightGrey, colours.black, colours.grey, statusWindow)
+    if type(itemCounter) == "boolean" then return end
 
-    SortTimerID = 0
+    RefreshTimerID = 0
+    IdleTimerID = 0
+    local idleTimerLength = tonumber(Config.idleTimer)
+    if idleTimerLength == nil then
+        error("idleTimer must be a number")
+    end
+    local errorIdleTimerLength = tonumber(Config.errorIdleTimer)
+    if errorIdleTimerLength == nil then
+        error("errorIdleTimer must be a number")
+    end
+    local listRefreshInterval = tonumber(Config.listRefreshInterval)
+    if listRefreshInterval == nil then
+        error("listRefreshInterval must be a number")
+    end
     local shouldSkipList
 
-    os.startTimer(0.1)
+    RefreshTimerID = os.startTimer(0.1)
 
     while true do
 
@@ -117,11 +150,11 @@ local function main(confFilePath)
 
         elseif mev[1] == "timer" then
 
-            timerHandler(mev)
+            timerHandler(mev, mainButtonPanel, itemCounter, statusWindow, listRefreshInterval)
 
         elseif mev[1] == "modem_message" then
 
-            modemMessageHandler(mev)
+            modemMessageHandler(mev, mainButtonPanel, itemCounter, idleTimerLength, errorIdleTimerLength)
 
         end
 

@@ -207,14 +207,14 @@ function ItemCountWatcher:setupButtons()
         colours.lime,
         function()
             self.unregOnly = true
-            os.cancelTimer(SortTimerID)
-            SortTimerID = os.startTimer(0.1)
+            os.cancelTimer(RefreshTimerID)
+            RefreshTimerID = os.startTimer(0.1)
         end,
         true,
         function()
             self.unregOnly = false
-            os.cancelTimer(SortTimerID)
-            SortTimerID = os.startTimer(0.1)
+            os.cancelTimer(RefreshTimerID)
+            RefreshTimerID = os.startTimer(0.1)
         end
     )
 
@@ -229,14 +229,14 @@ function ItemCountWatcher:setupButtons()
         colours.lime,
         function()
             self.stackMultiple = true
-            os.cancelTimer(SortTimerID)
-            SortTimerID = os.startTimer(0.1)
+            os.cancelTimer(RefreshTimerID)
+            RefreshTimerID = os.startTimer(0.1)
         end,
         true,
         function()
             self.stackMultiple = false
-            os.cancelTimer(SortTimerID)
-            SortTimerID = os.startTimer(0.1)
+            os.cancelTimer(RefreshTimerID)
+            RefreshTimerID = os.startTimer(0.1)
         end
     )
 end

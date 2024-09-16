@@ -59,6 +59,7 @@ function MainButtonPanel:cleanUnregisteredHandler(response)
     self:cleanMisplaced()
 end
 
+--- @return boolean outcome whether the outcome was entirely positive or not
 function MainButtonPanel:cleanMisplacedHandler(response)
 
     local message = {}
@@ -102,6 +103,7 @@ function MainButtonPanel:cleanMisplacedHandler(response)
     else
         self.sw:flash(colours.red, colours.black)
     end
+    return good
 end
 
 function MainButtonPanel:forget()
@@ -112,14 +114,14 @@ end
 
 function MainButtonPanel:sort()
 
-    self.sw:setMessage({"Status: Sorting from input"})
+    self.sw:setMessage({"Sorting from input..."})
     self.sw:render()
     self.rssObj:sortFromInput(self.inputChestID)
 
 end
 
 --- @param evIn table modem message
---- @return boolean unregisteredFound whether any unregistered items were found in the input chest
+--- @return boolean unregisteredFound whether the outcome was entirely positive or not
 function MainButtonPanel:sortHandler(evIn)
 
     --- @type Result
@@ -141,7 +143,7 @@ function MainButtonPanel:sortHandler(evIn)
         else
             self.sw:render()
         end
-        return false
+        return true
     else
         local message = {"Failed to sort some items:", ""}
         if outcome.unregistered > 0 then
@@ -156,20 +158,22 @@ function MainButtonPanel:sortHandler(evIn)
         end
         self.sw:setMessage(message)
         self.sw:flash(colours.red, colours.black)
-        return true
+        return false
     end
 
 end
 
 function MainButtonPanel:register()
 
-    self.sw:setMessage({"Status: Registering unknown items"})
+    self.sw:setMessage({"Registering unknown items..."})
     self.rssObj:detectAndRegisterItems()
 
 end
 
+--- @return boolean outcome whether the outcome was entirely positive or not
 function MainButtonPanel:registerHandler(evIn)
 
+    local good
     evIn[1]:handle(
         function(registered)
             self.sw:setMessage({"Registered "..registered.." item(s)"})
@@ -178,6 +182,7 @@ function MainButtonPanel:registerHandler(evIn)
             else
                 self.sw:render()
             end
+            good = true
         end,
         function(err)
             self.sw:setMessage({
@@ -185,8 +190,10 @@ function MainButtonPanel:registerHandler(evIn)
                 err
             })
             self.sw:flash(colours.red, colours.black)
+            good = false
         end
     )
+    return good
 end
 
 --- @param winManObj WindowManager
