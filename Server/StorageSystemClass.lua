@@ -148,6 +148,11 @@ function StorageSystem:detectAndRegisterItems()
         else itemsRegistered = itemsRegistered + 1 end
     end
 
+    local cRes = self.nameCache:cacheAllNames()
+    if cRes:is_err() then
+        self.logger:e("Failed to cache names after registering: "..cRes:unwrap_err(self.logger))
+    end
+
     return Ok(itemsRegistered)
 end
 
