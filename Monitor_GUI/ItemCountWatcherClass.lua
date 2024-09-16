@@ -8,7 +8,8 @@ local ccs = require("cc.strings")
 --- @field win AdvancedWindow
 --- @field rssObj RemoteStorageSystem
 --- @field sw StatusWindow
---- @field unregOnly boolean
+--- @field unregOnly boolean whether to only list unregistered items
+--- @field stackMultiple boolean whether to list item count as a number of stacks instead of a total count
 --- @field cacheTable table
 --- @field list table
 local ItemCountWatcher = {}
@@ -16,6 +17,17 @@ local ItemCountWatcher = {}
 local ItemCountWatcherMetatable = {
     __index = ItemCountWatcher
 }
+
+--- converts a simple number into a string representing the number of stacks and remainder
+local function stackMultiple(count, stackSize)
+    local stacks = math.floor(count / stackSize)
+    local remainder = math.fmod(count, stackSize)
+    if stacks > 0 then
+        return ("%dx%d + %2d"):format(stacks, stackSize, remainder)
+    else
+        return ("%d"):format(remainder)
+    end
+end
 
 function ItemCountWatcher:requestList()
 
@@ -94,7 +106,7 @@ function ItemCountWatcher:draw(itemsList, cacheTable)
     self.win:setCursorPos(1, 1)
     if self.unregOnly then
         self.win:write(
-            "Total: "..totalItemCount.." unregistered/misplaced item(s)"
+            "Total: "..totalItemCount.." Unregistered/Misplaced item(s)"
         )
     else
         self.win:write(
@@ -118,7 +130,23 @@ function ItemCountWatcher:draw(itemsList, cacheTable)
     --    string.len(sortedList[1][1]),
     --    string.len("Count")
     --)
-    local maxNumLength = string.len(sortedList[1][1])
+    local maxNumLength = 0
+    if self.stackMultiple then
+        -- biggest number no longer guarantees longest string, so we need to be more sophisticated
+
+        -- {count, name, regStatus}
+        for k, v in pairs(sortedList) do
+            local len = stackMultiple(v[1], cacheTable[v[2]][2]):len()
+            maxNumLength = math.max(maxNumLength, len)
+        end
+
+        -- maxNumLength = string.len(stackMultiple(
+        --     sortedList[1][1],
+        --     cacheTable[sortedList[1][2]][2]
+        -- ))
+    else
+        maxNumLength = string.len(sortedList[1][1])
+    end
 
     --self.win:print(
     --    ccs.ensure_width("Count", maxNumLength) .. " - " .. "Name"
@@ -131,7 +159,18 @@ function ItemCountWatcher:draw(itemsList, cacheTable)
 
     for y=1, math.min(self.win.height, #sortedList) do
         self.win:setCursorPos(1, y + yOffset)
-        local c = ccs.ensure_width(tostring(sortedList[y][1]), maxNumLength)
+        local c
+        if self.stackMultiple then
+            local format = stackMultiple(
+                sortedList[y][1],
+                cacheTable[sortedList[y][2]][2]
+            )
+            local padLen = maxNumLength - format:len()
+            local padding = (" "):rep(padLen)
+            c = padding..format
+        else
+            c = ccs.ensure_width(tostring(sortedList[y][1]), maxNumLength)
+        end
         local n
         if cacheTable[sortedList[y][2]] ~= nil then
             n = cacheTable[sortedList[y][2]][1]
@@ -182,6 +221,7 @@ local function new(winManObj, rssObj, name, x, y, w, h, bgcol, fgcol, bordercol,
     if icw.win == nil then return false end
 
     icw.unregOnly = false
+    icw.stackMultiple = false
 
     icw.win:addButton(
         "unregOnly",
@@ -200,6 +240,28 @@ local function new(winManObj, rssObj, name, x, y, w, h, bgcol, fgcol, bordercol,
         true,
         function()
             ItemCounter.unregOnly = false
+            os.cancelTimer(SortTimerID)
+            SortTimerID = os.startTimer(0.1)
+        end
+    )
+
+    icw.win:addButton(
+        "stackMultiple",
+        "S",
+        icw.win.width - 13,
+        1,
+        5,
+        3,
+        colours.red,
+        colours.lime,
+        function()
+            ItemCounter.stackMultiple = true
+            os.cancelTimer(SortTimerID)
+            SortTimerID = os.startTimer(0.1)
+        end,
+        true,
+        function()
+            ItemCounter.stackMultiple = false
             os.cancelTimer(SortTimerID)
             SortTimerID = os.startTimer(0.1)
         end
