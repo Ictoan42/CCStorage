@@ -37,6 +37,7 @@ end
 
 --- @param evIn table a modem message
 function ItemCountWatcher:handleListResponse(evIn)
+    -- just store the result from the list, we still need the cache and spaces before we can draw
 
     --- @type Result
     local res = evIn[1]
@@ -55,6 +56,7 @@ end
 
 --- @param evIn table a modem message
 function ItemCountWatcher:handleCacheResponse(evIn)
+    -- just store the cache, we still need the spaces before we can draw
 
     --- @type Result
     local res = evIn[1]
@@ -62,7 +64,7 @@ function ItemCountWatcher:handleCacheResponse(evIn)
     res:handle(
         function(val)
             self.cacheTable = val
-            self:draw(self.list, self.cacheTable)
+            self.rssObj:getAllItemSpaces()
         end,
         function(err)
             print("Failed to parse name table response: "..err)
@@ -70,9 +72,24 @@ function ItemCountWatcher:handleCacheResponse(evIn)
     )
 end
 
+--- @param evIn table a modem message
+function ItemCountWatcher:handleSpacesResponse(evIn)
+    --- @type Result
+    local res = evIn[1]
+    res:handle(
+        function(val)
+            self:draw(self.list, self.cacheTable, val)
+        end,
+        function(err)
+            print("Failed to parse spaces table response: "..err)
+        end
+    )
+end
+
 --- @param itemsList table from rss:organisedList(true)
 --- @param cacheTable table from rss:getCacheTable()
-function ItemCountWatcher:draw(itemsList, cacheTable)
+--- @param spacesTable table from rss:getAllItemSpaces()
+function ItemCountWatcher:draw(itemsList, cacheTable, spacesTable)
 
     -- itemsList is an argument to pass in a premade list from rss:organisedList(true)
 
@@ -146,6 +163,10 @@ function ItemCountWatcher:draw(itemsList, cacheTable)
         -- ))
     else
         maxNumLength = string.len(sortedList[1][1])
+        -- maxNumLength = ("%d/%d"):format(
+        --     sortedList[1][1],
+        --     spacesTable[sortedList[1][2]]
+        -- ):len()
     end
 
     --self.win:print(
@@ -169,6 +190,10 @@ function ItemCountWatcher:draw(itemsList, cacheTable)
             local padding = (" "):rep(padLen)
             c = padding..format
         else
+            -- c = ccs.ensure_width(("%d/%d"):format(
+            --     sortedList[y][1],
+            --     spacesTable[sortedList[y][2]]
+            -- ), maxNumLength)
             c = ccs.ensure_width(tostring(sortedList[y][1]), maxNumLength)
         end
         local n
@@ -183,13 +208,29 @@ function ItemCountWatcher:draw(itemsList, cacheTable)
             n2 = n2 .. ".."
         end
 
+        -- if this item is unregistered
         if sortedList[y][3] == false then
             local oldCol = self.win:getTextColour()
+            self.win:write(c .. " - ")
             self.win:setTextColour(colours.red)
-            self.win:write(c .. " - " .. n2)
+            self.win:write(n2)
             self.win:setTextColour(oldCol)
-        else
-            self.win:write(c .. " - " .. n2)
+        elseif spacesTable[sortedList[y][2]] then
+            local space = spacesTable[sortedList[y][2]]
+            local maxNum = sortedList[y][1] + space
+            -- between 0 and 1
+            local percent = sortedList[y][1] / maxNum
+            local oldCol = self.win:getTextColour()
+            if percent == 1 then
+                self.win:setTextColour(colours.red)
+            elseif percent > 0.9 then
+                self.win:setTextColour(colours.orange)
+            elseif percent > 0.75 then
+                self.win:setTextColour(colours.yellow)
+            end
+            self.win:write(c)
+            self.win:setTextColour(oldCol)
+            self.win:write(" - " .. n2)
         end
     end
 

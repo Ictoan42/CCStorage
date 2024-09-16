@@ -60,6 +60,10 @@ local function modemMessageHandler(evIn, mbp, icw, defaultIdleTimer, errorIdleTi
 
         icw:handleCacheResponse(decoded)
 
+    elseif decoded[2] == "getAllItemSpaces" then
+
+        icw:handleSpacesResponse(decoded)
+
     elseif decoded[2] == "cleanUnregisteredItems" then
 
         mbp:cleanUnregisteredHandler(decoded)
