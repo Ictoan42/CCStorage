@@ -11,7 +11,9 @@ local files = {
     "ItemCountWatcherClass.lua",
     "Main.lua",
     "MainButtonPanelClass.lua",
-    "StatusWindowClass.lua"
+    "StatusWindowClass.lua",
+    "Wrapper.lua",
+    "ConfigTemplate.conf"
 }
 
 for k, v in pairs(files) do

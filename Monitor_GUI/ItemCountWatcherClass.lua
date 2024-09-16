@@ -195,6 +195,52 @@ function ItemCountWatcher:draw(itemsList, cacheTable)
 
 end
 
+function ItemCountWatcher:setupButtons()
+    self.win:addButton(
+        "unregOnly",
+        "U",
+        self.win.width - 7,
+        1,
+        5,
+        3,
+        colours.red,
+        colours.lime,
+        function()
+            self.unregOnly = true
+            os.cancelTimer(SortTimerID)
+            SortTimerID = os.startTimer(0.1)
+        end,
+        true,
+        function()
+            self.unregOnly = false
+            os.cancelTimer(SortTimerID)
+            SortTimerID = os.startTimer(0.1)
+        end
+    )
+
+    self.win:addButton(
+        "stackMultiple",
+        "S",
+        self.win.width - 13,
+        1,
+        5,
+        3,
+        colours.red,
+        colours.lime,
+        function()
+            self.stackMultiple = true
+            os.cancelTimer(SortTimerID)
+            SortTimerID = os.startTimer(0.1)
+        end,
+        true,
+        function()
+            self.stackMultiple = false
+            os.cancelTimer(SortTimerID)
+            SortTimerID = os.startTimer(0.1)
+        end
+    )
+end
+
 --- @param winManObj WindowManager
 --- @param rssObj RemoteStorageSystem
 --- @param name string
@@ -223,50 +269,6 @@ local function new(winManObj, rssObj, name, x, y, w, h, bgcol, fgcol, bordercol,
     icw.unregOnly = false
     icw.stackMultiple = false
 
-    icw.win:addButton(
-        "unregOnly",
-        "U",
-        icw.win.width - 7,
-        1,
-        5,
-        3,
-        colours.red,
-        colours.lime,
-        function()
-            ItemCounter.unregOnly = true
-            os.cancelTimer(SortTimerID)
-            SortTimerID = os.startTimer(0.1)
-        end,
-        true,
-        function()
-            ItemCounter.unregOnly = false
-            os.cancelTimer(SortTimerID)
-            SortTimerID = os.startTimer(0.1)
-        end
-    )
-
-    icw.win:addButton(
-        "stackMultiple",
-        "S",
-        icw.win.width - 13,
-        1,
-        5,
-        3,
-        colours.red,
-        colours.lime,
-        function()
-            ItemCounter.stackMultiple = true
-            os.cancelTimer(SortTimerID)
-            SortTimerID = os.startTimer(0.1)
-        end,
-        true,
-        function()
-            ItemCounter.stackMultiple = false
-            os.cancelTimer(SortTimerID)
-            SortTimerID = os.startTimer(0.1)
-        end
-    )
-
     icw.rssObj = rssObj
 
     icw.sw = statusWindowObj
@@ -275,6 +277,8 @@ local function new(winManObj, rssObj, name, x, y, w, h, bgcol, fgcol, bordercol,
         icw,
         ItemCountWatcherMetatable
     )
+
+    icw:setupButtons()
 
     return icw
 
