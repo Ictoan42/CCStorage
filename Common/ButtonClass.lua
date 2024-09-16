@@ -7,6 +7,7 @@
 --- @field h number
 --- @field idleColour ccTweaked.colors.color
 --- @field activatedColour ccTweaked.colors.color
+--- @field textColour ccTweaked.colors.color
 --- @field callback function
 --- @field toggle boolean if this button is a togglebutton
 --- @field toggleState boolean the current state of this toggleButton
@@ -39,6 +40,7 @@ function Button:draw(isActivated, window)
     local labelXStart = xMid - ( string.len(self.label) / 2 )
 
     t.setCursorPos(labelXStart, self.y + ( self.h / 2 ))
+    t.setTextColour(self.textColour)
     t.write(self.label)
 
     t.setBackgroundColour(colours.black)
@@ -99,12 +101,13 @@ local ButtonMetatable = {
 --- @param h number
 --- @param idleColour ccTweaked.colors.color
 --- @param activatedColour ccTweaked.colors.color
+--- @param textColour ccTweaked.colors.color
 --- @param callback function function to run when the button is pressed
 --- @param toggle boolean|nil whether this button is a togglebutton
 --- @param callbackOff function|nil function to run when this togglebutton is turned off
 --- @return table
 --- Create a new button
-local function new(id, label, x, y, w, h, idleColour, activatedColour, callback, toggle, callbackOff)
+local function new(id, label, x, y, w, h, idleColour, activatedColour, textColour, callback, toggle, callbackOff)
     toggle = toggle or false
     return setmetatable(
         {
@@ -116,6 +119,7 @@ local function new(id, label, x, y, w, h, idleColour, activatedColour, callback,
             h = h,
             idleColour = idleColour,
             activatedColour = activatedColour,
+            textColour = textColour,
             callback = callback,
             toggle = toggle,
             callbackOff = callbackOff,

@@ -68,6 +68,7 @@ function AdvancedWindow:addButton(
 	    h,
 	    idleColour,
 	    activatedColour,
+	    self.foregroundColour,
 	    callback,
 	    toggle,
 	    callbackOff
