@@ -548,7 +548,7 @@ function itemSorter:getAllItemSpaces()
                 if spaceR:is_ok() then
                     spaces[item.name] = spaceR:unwrap()
                 else
-                    self.logger:i("Couldn't get space for item "..item.name..": "..spaceR:unwrap_err())
+                    self.logger:d("Couldn't get space for item "..item.name..": "..spaceR:unwrap_err())
                 end
             end
 
