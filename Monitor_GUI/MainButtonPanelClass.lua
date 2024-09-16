@@ -62,10 +62,13 @@ end
 function MainButtonPanel:cleanMisplacedHandler(response)
 
     local message = {}
+    local actuallyDidSomething = false
     local good = true
 
     if self.unregMoved ~= nil and self.unregMoved:is_ok() then
-        table.insert(message, "Moved "..self.unregMoved:unwrap().." unregistered item(s) into the input chest")
+        local unregMoved = self.unregMoved:unwrap()
+        actuallyDidSomething = actuallyDidSomething or unregMoved > 0
+        table.insert(message, "Moved "..unregMoved.." unregistered item(s) into the input chest")
         table.insert(message, "")
     elseif self.unregMoved ~= nil then
         table.insert(message, "Failed to clean unregistered items due to an error:")
@@ -78,6 +81,8 @@ function MainButtonPanel:cleanMisplacedHandler(response)
     local res = response[1]
     if res:is_ok() then
         local sorted, dumped = table.unpack(res:unwrap())
+        actuallyDidSomething = actuallyDidSomething or sorted > 0
+        actuallyDidSomething = actuallyDidSomething or dumped > 0
         table.insert(message, "Moved "..sorted.." misplaced item(s) into their correct chests")
         table.insert(message, "")
         table.insert(message, "Moved "..dumped.." misplaced item(s) into the input chest")
@@ -89,7 +94,11 @@ function MainButtonPanel:cleanMisplacedHandler(response)
 
     self.sw:setMessage(message)
     if good then
-        self.sw:flash(colours.lime, colours.black)
+        if actuallyDidSomething then
+            self.sw:flash(colours.lime, colours.black)
+        else
+            self.sw:render()
+        end
     else
         self.sw:flash(colours.red, colours.black)
     end
