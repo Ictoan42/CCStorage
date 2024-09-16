@@ -12,6 +12,7 @@ local files = {
     "ConfigTemplate.conf",
     "ItemHandlerClass.lua",
     "Main.lua",
+    "NameStackCacheClass.lua",
     "SortingListClass.lua",
     "StorageSystemClass.lua",
     "StorageSystemModemListener.lua"
