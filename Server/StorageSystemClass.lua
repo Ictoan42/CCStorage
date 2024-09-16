@@ -205,10 +205,18 @@ local function new(confFilePath)
     -- create config file obj
     local cfg = ConfigFile.new(confFilePath)
 
+    -- define all the vars here
+    --- @type Logger|nil
+    --- @diagnostic disable-next-line: missing-fields
+    local logger = {}
+    local sortingList = {}
+    local chestArray = {}
+    local itemHandler = {}
+    local nameCache = {}
+
     ---------------
     -- INIT LOGGER
     ---------------
-    local logger
     do
 
         local logFile
@@ -280,7 +288,6 @@ local function new(confFilePath)
         f.close()
     end
 
-    local sortingList
     do
         sortingList = SortingList.new(
             cfg.sortingListFilePath,
@@ -293,7 +300,6 @@ local function new(confFilePath)
     ---------------
     -- INIT CHESTARRAY
     ---------------
-    local chestArray
     do
         --- @type ccTweaked.peripherals.WiredModem
         --- @diagnostic disable-next-line: assign-type-mismatch
@@ -329,7 +335,6 @@ local function new(confFilePath)
     ---------------
     -- INIT ITEMHANDLER
     ---------------
-    local itemHandler
     do
         itemHandler = ItemHandler.new(
             chestArray,
@@ -350,7 +355,7 @@ local function new(confFilePath)
         f.write("\n")
         f.close()
     end
-    local nameCache = NameCache.new(
+    nameCache = NameCache.new(
         cfg.nameCacheFilePath,
         cfg.nameCacheBackupFilePath,
         cfg.nameCacheBrokenFilePath,
