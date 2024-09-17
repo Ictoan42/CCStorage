@@ -326,12 +326,21 @@ function itemSorter:cleanUnregisteredItems(dumpChest)
         return Err("Ran out of space in dump chest")
     end
 
+    local funcsToExec = {}
+
     -- iterate over every unregistered item that was found
     local itemsMoved = 0
-    for k, v in ipairs(itemsToClean) do -- using ipairs ignores the "count" entry without an explicit check
+    for k, item in ipairs(itemsToClean) do -- using ipairs ignores the "count" entry without an explicit check
         -- move the item to the output
-        itemsMoved = itemsMoved + dumpChestPeriph.pullItems(v[1], v[2])
+        itemsMoved = itemsMoved + item[3]
+        table.insert(funcsToExec,
+            function()
+                dumpChestPeriph.pullItems(item[1], item[2])
+            end
+        )
     end
+
+    EU.SplitAndExecSafely(funcsToExec)
 
     return Ok(itemsMoved)
 end
