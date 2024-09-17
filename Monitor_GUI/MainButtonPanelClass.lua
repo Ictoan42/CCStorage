@@ -52,9 +52,6 @@ function MainButtonPanel:cleanMisplaced()
     self.rssObj:cleanMisplacedItems(self.dumpChestID)
 end
 
-function MainButtonPanel:requestForget(ch)
-end
-
 function MainButtonPanel:cleanUnregisteredHandler(response)
 
     --- @type Result
@@ -131,7 +128,6 @@ function MainButtonPanel:handleForgetResponse(response)
         end
     )
 end
-
 
 function MainButtonPanel:forget()
     self.rssObj:unregisterAllInChest(self.inputChestID)
