@@ -8,10 +8,10 @@ fs.makeDir("/CCStorage/Monitor_GUI")
 local mainURL = "https://raw.githubusercontent.com/Ictoan42/CCStorage/main/"
 
 local files = {
+    "ConfigTemplate.conf",
     "ItemCountWatcherClass.lua",
     "Main.lua",
     "MainButtonPanelClass.lua",
-    "StatusWindowClass.lua",
     "Wrapper.lua",
     "ConfigTemplate.conf"
 }

@@ -15,7 +15,11 @@ local files = {
     "AdvancedWindowClass.lua",
     "ButtonClass.lua",
     "ConfigFileClass.lua",
+    "ExecUtils.lua",
+    "InvUtils.lua",
     "RemoteStorageSystemClass.lua",
+    "ResultClass.lua",
+    "StatusWindowClass.lua",
     "WindowManagerClass.lua"
 }
 
