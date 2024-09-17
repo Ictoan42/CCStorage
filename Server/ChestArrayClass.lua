@@ -116,8 +116,8 @@ end
 ---   ["minecraft:grass_block"] = {
 ---     ["count"] = integer,
 ---     ["reg"] = {"destinationPeriphID"|nil, isCorrectBool}, -- only if getReg == true
----     ["maxCount"] = integer, -- only if getMaxCount == true AND item is registered
----     ["displayName"] = "Display Name"|nil, -- only if getDisplayName == true AND item is registered
+---     ["maxCount"] = integer, -- only if getMaxCount == true AND item is cached
+---     ["displayName"] = "Display Name"|nil, -- only if getDisplayName == true AND item is cached
 ---     ["space"] = {spaceLeftInt, chestCapacityInt}, -- only if getSpace == true AND item is registered
 ---   },
 --- }
