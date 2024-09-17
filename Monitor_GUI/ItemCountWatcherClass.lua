@@ -45,8 +45,6 @@ function ItemCountWatcher:handleListResponse(evIn)
     res:handle(
         function(val)
             self:draw(val)
-            -- self.list = val
-            -- self.rssObj:getCacheTable()
         end,
         function(err)
             print("Failed to parse response to list request: "..err)
@@ -55,42 +53,8 @@ function ItemCountWatcher:handleListResponse(evIn)
 
 end
 
---- @param evIn table a modem message
-function ItemCountWatcher:handleCacheResponse(evIn)
-    -- just store the cache, we still need the spaces before we can draw
-
-    --- @type Result
-    local res = evIn[1]
-
-    res:handle(
-        function(val)
-            self.cacheTable = val
-            self.rssObj:getAllItemSpaces()
-        end,
-        function(err)
-            print("Failed to parse name table response: "..err)
-        end
-    )
-end
-
---- @param evIn table a modem message
-function ItemCountWatcher:handleSpacesResponse(evIn)
-    --- @type Result
-    local res = evIn[1]
-    res:handle(
-        function(val)
-            self:draw(self.list, self.cacheTable, val)
-        end,
-        function(err)
-            print("Failed to parse spaces table response: "..err)
-        end
-    )
-end
-
---- @param itemsList table from rss:organisedList(true, true, true)
+--- @param itemsList table from rss:organisedList(true, true, true, true)
 function ItemCountWatcher:draw(itemsList)
-
-    -- itemsList is an argument to pass in a premade list from rss:organisedList(true, true, true)
 
     local items = itemsList
 
