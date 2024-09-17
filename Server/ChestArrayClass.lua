@@ -116,8 +116,8 @@ end
 ---   ["minecraft:grass_block"] = {
 ---     ["count"] = integer,
 ---     ["reg"] = {"destinationPeriphID"|nil, isCorrectBool}, -- only if getReg == true
----     ["maxCount"] = integer, -- only if getMaxCount == true AND item is cached
----     ["displayName"] = "Display Name"|nil, -- only if getDisplayName == true AND item is cached
+---     ["maxCount"] = integer, -- only if getMaxCount == true
+---     ["displayName"] = "Display Name"|nil, -- only if getDisplayName == true
 ---     ["space"] = {spaceLeftInt, chestCapacityInt}, -- only if getSpace == true AND item is registered
 ---   },
 --- }
@@ -138,6 +138,8 @@ function chestArray:sortedList(getReg, getMaxCount, getDisplayName, getSpace)
         return listR
     end
 
+    self.nameCache:cacheAll(itemList)
+
     local cache = self.nameCache:getDict()
 
     local spaces
@@ -152,6 +154,7 @@ function chestArray:sortedList(getReg, getMaxCount, getDisplayName, getSpace)
         local chestSize = chestContents.chestSize
         for slot, item in pairs(chestContents) do -- iterate over every item in the chest
             if type(slot) == "string" then
+                -- skip "chestName" and "chestSize" keys
                 goto continue
             end
             local itemName = item.name

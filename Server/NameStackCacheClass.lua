@@ -142,14 +142,16 @@ function NameStackCache:getDict()
     return self.cache
 end
 
---- Get the display names and stacks sizes of every item in the system
+--- @param list table|nil the output of ChestArray:list(), to skip a bunch of peripheral calls where possible
 --- @return Result nil
-function NameStackCache:cacheAll()
+--- Get the display names and stacks sizes of every item in the system
+function NameStackCache:cacheAll(list)
 
-    local listRes = self.chestArray:list()
-    local list
-    if listRes:is_ok() then list = listRes:unwrap()
-    else return listRes end
+    if list == nil then
+        local listRes = self.chestArray:list()
+        if listRes:is_ok() then list = listRes:unwrap()
+        else return listRes end
+    end
 
     local funcsToExec = {}
 
