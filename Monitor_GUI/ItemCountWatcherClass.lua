@@ -41,7 +41,6 @@ end
 
 --- @param evIn table a modem message
 function ItemCountWatcher:handleListResponse(evIn)
-    -- just store the result from the list, we still need the cache and spaces before we can draw
 
     --- @type Result
     local res = evIn[1]
@@ -51,7 +50,8 @@ function ItemCountWatcher:handleListResponse(evIn)
             self:draw(val)
         end,
         function(err)
-            print("Failed to parse response to list request: "..err)
+            self.sw:setMessage({"Failed to get list:", err})
+            self.sw:flash(colours.red, colours.black)
         end
     )
 

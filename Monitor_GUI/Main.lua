@@ -56,6 +56,10 @@ local function modemMessageHandler(evIn, mbp, icw, defaultIdleTimer, errorIdleTi
 
         icw:handleListResponse(decoded)
 
+    elseif decoded[2] == "unregisterAllInChest" then
+
+        mbp:handleForgetResponse(decoded)
+
     elseif decoded[2] == "cleanUnregisteredItems" then
 
         mbp:cleanUnregisteredHandler(decoded)

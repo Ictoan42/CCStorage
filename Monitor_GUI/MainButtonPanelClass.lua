@@ -52,6 +52,9 @@ function MainButtonPanel:cleanMisplaced()
     self.rssObj:cleanMisplacedItems(self.dumpChestID)
 end
 
+function MainButtonPanel:requestForget(ch)
+end
+
 function MainButtonPanel:cleanUnregisteredHandler(response)
 
     --- @type Result
@@ -107,10 +110,31 @@ function MainButtonPanel:cleanMisplacedHandler(response)
     return good
 end
 
+--- @param response table a modem message
+function MainButtonPanel:handleForgetResponse(response)
+
+    --- @type Result
+    local res = response[1]
+
+    res:handle(
+        function(val)
+            self.sw:setMessage({"Unregistered "..#val.." item(s)"})
+            if #val > 0 then
+                self.sw:flash(colours.lime, colours.black)
+            else
+                self.sw:render()
+            end
+        end,
+        function(err)
+            self.sw:setMessage({"Failed to forget items:", err})
+            self.sw:flash(colours.red, colours.black)
+        end
+    )
+end
+
+
 function MainButtonPanel:forget()
-    --TODO: this
-    self.sw:setMessage({"The Forget button doesn't do anything yet"," ",":)"})
-    self.sw:render()
+    self.rssObj:unregisterAllInChest(self.inputChestID)
 end
 
 function MainButtonPanel:sort()
