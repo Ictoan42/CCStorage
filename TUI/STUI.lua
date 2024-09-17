@@ -26,11 +26,12 @@ local sb = SB.new(wm, 2, 6, termx-2, termy-6, colours.black, colours.white, colo
 
 local ctrlIsHeld
 local resetBorderColourTimerID = -1 -- i don't think timer IDs can be negative???
+local latestList = {}
 
 local function requestItemList()
     sb:setListOverride("Refreshing...")
     sb:draw()
-    rss:organisedList()
+    rss:organisedList(false, true)
 end
 
 --- @param colour ccTweaked.colors.color
@@ -51,6 +52,8 @@ local function handleItemListResponse(evIn)
     else
         error("Couldn't decode list response: "..res:unwrap_err())
     end
+
+    latestList = listIn
 
     local largestNumber = 0
     for itemID, item in pairs(listIn) do
@@ -174,7 +177,8 @@ local function handleKeyEv(ev)
             local count, name = string.match(sel,"([0-9]+) +- ([^ ]+) +")
             sb.win:setBorderColour(colours.white)
             sb:draw()
-            rss:retrieve(name, outChest, math.min(count, 64*10))
+            local stackSize = latestList[name].maxCount
+            rss:retrieve(name, outChest, math.min(count, stackSize*10))
         end
     else
         if ev[2] == 259 then
@@ -195,7 +199,8 @@ local function handleKeyEv(ev)
             local count, name = string.match(sel,"([0-9]+) +- ([^ ]+) +")
             sb.win:setBorderColour(colours.white)
             sb:draw()
-            rss:retrieve(name, outChest, math.min(count, 64))
+            local stackSize = latestList[name].maxCount
+            rss:retrieve(name, outChest, math.min(count, stackSize))
         end
     end
     return false
