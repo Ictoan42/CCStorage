@@ -20,6 +20,10 @@ local ItemCountWatcherMetatable = {
 
 --- converts a simple number into a string representing the number of stacks and remainder
 local function stackMultiple(count, stackSize)
+    if stackSize == 1 then
+        -- shortcut for non stackables
+        return ("%d"):format(count)
+    end
     local stacks = math.floor(count / stackSize)
     local remainder = math.fmod(count, stackSize)
     if stacks > 0 then

@@ -160,6 +160,38 @@ function itemSorter:sortAllFromChest(from)
     return Ok(retInfo)
 end
 
+--- @param ch string
+--- @return Result table list of item IDs that have been unregistered by this call
+--- Unregister every item found in the given chest
+function itemSorter:unregisterAllInChest(ch)
+
+    if type(ch) ~= "string" then
+        return Err("Chest peripheral ID must be a string")
+    end
+
+    local chPeriphRes = Try(peripheral.wrap(ch), "Peripheral '"..ch.."' does not exist")
+    local chPeriph
+    if chPeriphRes:is_ok() then
+        chPeriph = chPeriphRes:unwrap()
+    else
+        self.logger:e("Tried to unregister items in chest '"..ch.."', which doesn't exist")
+        return chPeriphRes
+    end
+
+    local list = chPeriph.list()
+
+    local itemsUnregistered = {}
+
+    for slot, item in pairs(list) do
+        if self.sortingList:getDest(item.name) then
+            self.sortingList:removeDest(item.name)
+            table.insert(itemsUnregistered, item.name)
+        end
+    end
+
+    return Ok(itemsUnregistered)
+end
+
 --- @return Result table list of items, maybe empty
 --- Finds all items in the system which don't have a registered storage location
 --- Return format:

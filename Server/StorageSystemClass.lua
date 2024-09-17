@@ -116,6 +116,13 @@ function StorageSystem:sortFromInput(inputChestID)
     return self.itemHandler:sortAllFromChest(inputChestID)
 end
 
+--- @param inputChestID string
+--- @return Result table
+--- Passthrough to ItemHandler:unregisterAllInChest
+function StorageSystem:unregisterAllInChest(inputChestID)
+    return self.itemHandler:unregisterAllInChest(inputChestID)
+end
+
 --- @param itemID string
 --- @param outputChestID string
 --- @param count? number

@@ -141,6 +141,13 @@ function RemoteStorageSystem:sortFromInput(inputChestID)
     return self:sendReq({"sortFromInput", inputChestID})
 end
 
+--- @param inputChestID string
+--- @return Result table list of item IDs that have been unregistered by this call
+--- Unregister every item found in the given chest
+function RemoteStorageSystem:unregisterAllInChest(inputChestID)
+    return self:sendReq({"unregisterAllInChest", inputChestID})
+end
+
 --- @param itemID string
 --- @param outputChestID string
 --- @param count? number
