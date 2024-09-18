@@ -6,9 +6,8 @@ CCS = require("cc.strings")
 PR = require("cc.pretty")
 PRW = function(obj) return PR.render(PR.pretty(obj)) end
 
---TODO: this should use a config file
-
 local outChest = "minecraft:chest_271"
+
 --- @type ccTweaked.peripherals.WiredModem
 --- @diagnostic disable-next-line: assign-type-mismatch
 local modem = peripheral.find("modem")
