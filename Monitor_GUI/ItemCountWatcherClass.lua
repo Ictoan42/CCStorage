@@ -10,6 +10,7 @@ local ccs = require("cc.strings")
 --- @field sw StatusWindow
 --- @field unregOnly boolean whether to only list unregistered items
 --- @field stackMultiple boolean whether to list item count as a number of stacks instead of a total count
+--- @field percent boolean whether to list item's percent full next to the number
 --- @field cacheTable table
 --- @field list table
 local ItemCountWatcher = {}
@@ -18,19 +19,54 @@ local ItemCountWatcherMetatable = {
     __index = ItemCountWatcher
 }
 
---- converts a simple number into a string representing the number of stacks and remainder
-local function stackMultiple(count, stackSize)
-    if stackSize == 1 then
-        -- shortcut for non stackables
-        return ("%d"):format(count)
+--- @param percent number|nil between 0 and 1
+local function percentStr(percent)
+    if percent then
+        return (" (%3d%%)"):format(percent*100)
+    else
+        return " ( ??%)"
     end
+end
+
+--- converts a simple number into a string representing the number of stacks and remainder
+--- @param count integer
+--- @param percent number|nil between 0 and 1
+--- @param stackSize integer
+--- @param bgColHex string
+--- @param showPercent boolean
+--- @param forceWidth integer|nil
+--- @return string, string, string
+local function renderStackCount(count, percent, stackSize, bgColHex, showPercent, forceWidth)
+    local strout
+    local sfgcol
+
+    local fgcol
+    if percent and percent == 1 then fgcol = "e" -- red
+    elseif percent and percent >= 0.9 then fgcol = "1" --orange
+    elseif percent and percent >= 0.75 then fgcol = "4" -- yellow
+    else fgcol = "f" end --black
+
     local stacks = math.floor(count / stackSize)
     local remainder = math.fmod(count, stackSize)
-    if stacks > 0 then
-        return ("%dx%d + %2d"):format(stacks, stackSize, remainder)
+    if stackSize == 1 then
+        -- shortcut for non stackables
+        strout = ("%d"):format(count)
+        sfgcol = fgcol:rep(strout:len())
+    elseif stacks > 0 then
+        strout = ("%dx%d +%2d"):format(stacks, stackSize, remainder)
     else
-        return ("%d"):format(remainder)
+        strout = ("%d"):format(remainder)
     end
+    if showPercent then
+        strout = strout..percentStr(percent)
+    end
+    if forceWidth then
+        local lendiff = forceWidth - strout:len()
+        local pad = (" "):rep(lendiff)
+        strout = pad..strout
+    end
+    sfgcol = strout:gsub("[^x+]", fgcol):gsub("[x+]", "7")
+    return strout, sfgcol, bgColHex:rep(strout:len())
 end
 
 function ItemCountWatcher:requestList()
@@ -66,7 +102,7 @@ function ItemCountWatcher:draw(itemsList)
     local filteredList = {}
     for itemID, itemInfo in pairs(items) do
         if self.unregOnly then
-            if itemInfo.reg[1] == nil then
+            if itemInfo.reg[2] == false then
                 filteredList[itemID] = itemInfo
             end
         else
@@ -122,7 +158,13 @@ function ItemCountWatcher:draw(itemsList)
         -- biggest number no longer guarantees longest string, so we need to be more sophisticated
 
         for k, item in pairs(sortedList) do
-            local len = stackMultiple(item.count, item.maxCount or 64):len()
+            local len = renderStackCount(
+                item.count,
+                nil,
+                item.maxCount or 64,
+                "8",
+                self.percent
+            ):len()
             maxNumLength = math.max(maxNumLength, len)
         end
     else
@@ -137,51 +179,60 @@ function ItemCountWatcher:draw(itemsList)
     for y=1, math.min(self.win.height, #sortedList) do
         local item = sortedList[y]
         self.win:setCursorPos(1, y + yOffset)
-        local c
+        local countStr, csfg, csbg
+        local percent
+        if item.space then
+            local space = item.space[1]
+            local numItems = item.space[2] - item.space[1]
+            -- between 0 and 1
+            percent = numItems / item.space[2]
+        end
         if self.stackMultiple then
-            local format = stackMultiple(
+            countStr, csfg, csbg = renderStackCount(
                 item.count,
-                item.maxCount or 64
+                percent,
+                item.maxCount or 64,
+                "8",
+                self.percent,
+                maxNumLength
             )
-            local padLen = maxNumLength - format:len()
-            local padding = (" "):rep(padLen)
-            c = padding..format
         else
-            c = ccs.ensure_width(tostring(item.count), maxNumLength)
+            local fgcol
+            if percent and percent == 1 then fgcol = "e" -- red
+            elseif percent and percent >= 0.9 then fgcol = "1" --orange
+            elseif percent and percent >= 0.75 then fgcol = "4" -- yellow
+            else fgcol = "f" end --black
+            countStr = ccs.ensure_width(tostring(item.count), maxNumLength)
+            if self.percent then
+                countStr = countStr..percentStr(percent)
+            end
+            csfg = fgcol:rep(countStr:len())
+            csbg = ("8"):rep(countStr:len())
         end
-        local n
+        local nameStr
         if item.displayName ~= nil then
-            n = item.displayName
+            nameStr = item.displayName
         else
-            n = tostring(item[1])
+            nameStr = tostring(item[1])
         end
-        local n2 = n:sub(1, math.min(n:len(), maxNameLength - 4))
+        local n2 = nameStr:sub(1, math.min(nameStr:len(), maxNameLength - 4))
 
-        if n:len() > maxNameLength - 4 then
+        if nameStr:len() > maxNameLength - 4 then
             n2 = n2 .. ".."
         end
 
         -- if this item is unregistered or misplaced
         if item.reg[2] == false then
             local oldCol = self.win:getTextColour()
-            self.win:write(c .. " - ")
+            self.win:blit(countStr, csfg, csbg)
+            self.win:setTextColour(oldCol)
+            self.win:write(" - ")
             self.win:setTextColour(colours.red)
             self.win:write(n2)
             self.win:setTextColour(oldCol)
         elseif item.space then
-            local space = item.space[1]
-            -- between 0 and 1
-            local numItems = item.space[2] - item.space[1]
-            local percent = numItems / item.space[2]
             local oldCol = self.win:getTextColour()
-            if percent == 1 then
-                self.win:setTextColour(colours.red)
-            elseif percent > 0.9 then
-                self.win:setTextColour(colours.orange)
-            elseif percent > 0.75 then
-                self.win:setTextColour(colours.yellow)
-            end
-            self.win:write(c)
+            self.win:blit(countStr, csfg, csbg)
             self.win:setTextColour(oldCol)
             self.win:write(" - " .. n2)
         end
@@ -233,6 +284,28 @@ function ItemCountWatcher:setupButtons()
             RefreshTimerID = os.startTimer(0.1)
         end
     )
+
+    self.win:addButton(
+        "percent",
+        "P",
+        self.win.width - 7,
+        9,
+        5,
+        3,
+        colours.red,
+        colours.lime,
+        function()
+            self.percent = true
+            os.cancelTimer(RefreshTimerID)
+            RefreshTimerID = os.startTimer(0.1)
+        end,
+        true,
+        function()
+            self.percent = false
+            os.cancelTimer(RefreshTimerID)
+            RefreshTimerID = os.startTimer(0.1)
+        end
+    )
 end
 
 --- @param winManObj WindowManager
@@ -262,6 +335,7 @@ local function new(winManObj, rssObj, name, x, y, w, h, bgcol, fgcol, bordercol,
 
     icw.unregOnly = false
     icw.stackMultiple = false
+    icw.percent = false
 
     icw.rssObj = rssObj
 
