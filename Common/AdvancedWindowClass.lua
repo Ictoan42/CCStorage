@@ -28,6 +28,15 @@ function AdvancedWindow:write(text)
 
 end
 
+--- @param text string
+--- @param sFgColour string
+--- @param sBgColour string
+--- Same as term.blit
+function AdvancedWindow:blit(text, sFgColour, sBgColour)
+    self.innerWin.blit(text, sFgColour, sBgColour)
+    self:drawButtons()
+end
+
 --- @param id string id to refer to the button as
 --- @param label string text to write on the button
 --- @param x number
