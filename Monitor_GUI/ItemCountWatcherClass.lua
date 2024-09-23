@@ -1,5 +1,7 @@
 -- a window that lists the most common items in the storage system
 
+local BU = require("/CCStorage.Common.BlitUtils")
+
 local pr = require("cc.pretty")
 local prp = pr.pretty_print
 local ccs = require("cc.strings")
@@ -20,53 +22,92 @@ local ItemCountWatcherMetatable = {
 }
 
 --- @param percent number|nil between 0 and 1
-local function percentStr(percent)
-    if percent then
-        return (" (%3d%%)"):format(percent*100)
-    else
-        return " ( ??%)"
-    end
+--- @return ccTweaked.colors.color|nil
+local function spaceWarningCol(percent)
+    local col
+    if percent and percent == 1 then col = colours.red
+    elseif percent and percent >= 0.9 then col = colours.orange
+    elseif percent and percent >= 0.75 then col = colours.yellow
+    else col = nil end
+    return col
 end
 
---- converts a simple number into a string representing the number of stacks and remainder
---- @param count integer
 --- @param percent number|nil between 0 and 1
---- @param stackSize integer
---- @param bgColHex string
---- @param showPercent boolean
---- @param forceWidth integer|nil
---- @return string, string, string
-local function renderStackCount(count, percent, stackSize, bgColHex, showPercent, forceWidth)
-    local strout
-    local sfgcol
+--- @return Blit
+local function percentStr(percent)
+    local b = BU.new(colours.black, colours.lightGrey)
+    local col = spaceWarningCol(percent)
+    if percent then
+        b:write((" (%3d%%)"):format(percent*100), col)
+    else
+        b:write(" ( ??%)", col)
+    end
+    return b
+end
 
-    local fgcol
-    if percent and percent == 1 then fgcol = "e" -- red
-    elseif percent and percent >= 0.9 then fgcol = "1" --orange
-    elseif percent and percent >= 0.75 then fgcol = "4" -- yellow
-    else fgcol = "f" end --black
+--- @param itemCount integer item count
+--- @param stackSize integer stack size
+--- @param percent number percent full
+--- @param shouldRenderPercent boolean should render percent
+local function renderStackMultiple(itemCount, stackSize, percent, shouldRenderPercent)
+    local bout = BU.new(colours.black, colours.lightGrey)
 
-    local stacks = math.floor(count / stackSize)
-    local remainder = math.fmod(count, stackSize)
+    local col -- colour to indicate percent
+    if percent and percent == 1 then col = colours.red
+    elseif percent and percent >= 0.9 then col = colours.orange
+    elseif percent and percent >= 0.75 then col = colours.yellow
+    else col = nil end
+
+    local stacks = math.floor(itemCount / stackSize)
+    local remainder = math.fmod(itemCount, stackSize)
     if stackSize == 1 then
         -- shortcut for non stackables
-        strout = ("%d"):format(count)
-        sfgcol = fgcol:rep(strout:len())
+        bout:write(("%d"):format(itemCount), col)
     elseif stacks > 0 then
-        strout = ("%dx%d +%2d"):format(stacks, stackSize, remainder)
+        bout:write(
+            ("%dx%d + %2d"):format(stacks, stackSize, remainder),
+            col
+        )
     else
-        strout = ("%d"):format(remainder)
+        bout:write(("%d"):format(remainder), col)
     end
-    if showPercent then
-        strout = strout..percentStr(percent)
+    if shouldRenderPercent then
+        bout:concat(percentStr(percent))
     end
-    if forceWidth then
-        local lendiff = forceWidth - strout:len()
-        local pad = (" "):rep(lendiff)
-        strout = pad..strout
+    return bout
+end
+
+--- @param itemCount integer item count
+--- @param percent number percent full
+--- @param shouldRenderPercent boolean should render percent
+local function renderCount(itemCount, percent, shouldRenderPercent)
+    local bout = BU.new(colours.black, colours.lightGrey)
+
+    local col -- colour to indicate percent
+    if percent and percent == 1 then col = colours.red
+    elseif percent and percent >= 0.9 then col = colours.orange
+    elseif percent and percent >= 0.75 then col = colours.yellow
+    else col = nil end
+
+    bout:write(("%d"):format(itemCount), col)
+
+    if shouldRenderPercent then
+        bout:concat(percentStr(percent))
     end
-    sfgcol = strout:gsub("[^x+]", fgcol):gsub("[x+]", "7")
-    return strout, sfgcol, bgColHex:rep(strout:len())
+
+    return bout
+end
+
+--- @param displayName string|nil
+--- @param itemID string
+--- @param regStatus boolean whether the item is stored correctly
+local function renderItemName(displayName, itemID, regStatus)
+    local bout = BU.new(colours.black, colours.lightGrey)
+    local name = displayName or itemID
+    local col
+    if regStatus == false then col = colours.red end
+    bout:write(name, col)
+    return bout
 end
 
 function ItemCountWatcher:requestList()
@@ -98,7 +139,7 @@ function ItemCountWatcher:draw(itemsList)
 
     local items = itemsList
 
-    -- filter out desired items
+    -- filter out undesired items
     local filteredList = {}
     for itemID, itemInfo in pairs(items) do
         if self.unregOnly then
@@ -110,7 +151,7 @@ function ItemCountWatcher:draw(itemsList)
         end
     end
 
-    -- find how many items there are total
+    -- find how many items there are total and the largest count
     local totalItemCount = 0
     for itemID, itemInfo in pairs(filteredList) do
         totalItemCount = totalItemCount + itemInfo.count
@@ -133,109 +174,62 @@ function ItemCountWatcher:draw(itemsList)
         return
     end
 
-    -- create copy in a sortable format
-    local sortedList = {}
+    -- format {itemCount, countBlit, nameBlit}
+    local renderedArr = {}
+
+    -- render count and name blits
+    -- also keep track of some useful metrics
+    local maxNumLen = 0
+    local maxNameLen = 0
     for itemID, itemInfo in pairs(filteredList) do
-        itemInfo[1] = itemID
-        table.insert(sortedList,
-            itemInfo
+        local itemArr = {itemInfo.count}
+        local percent
+        if itemInfo.space then
+            local space = itemInfo.space[1]
+            local numItems = itemInfo.space[2] - itemInfo.space[1]
+            -- between 0 and 1
+            percent = numItems / itemInfo.space[2]
+        end
+        if self.stackMultiple then
+            itemArr[2] = renderStackMultiple(itemInfo.count, itemInfo.maxCount, percent, self.percent)
+        else
+            itemArr[2] = renderCount(itemInfo.count, percent, self.percent)
+        end
+        itemArr[3] = renderItemName(itemInfo.displayName, itemID, itemInfo.reg[2])
+        table.insert(
+            renderedArr,
+            itemArr
         )
+        if itemArr[2]:len() > maxNumLen then
+            maxNumLen = itemArr[2]:len()
+        end
+        if itemArr[3]:len() > maxNameLen then
+            maxNameLen = itemArr[3]:len()
+        end
     end
 
-    -- sort in order of count
+    -- sort by count
     table.sort(
-        sortedList,
+        renderedArr,
         function(a1, a2)
-            return a1.count > a2.count
+            return a1[1] > a2[1]
         end
     )
 
-    -- require("cc.pretty").pretty_print(sortedList)
-    -- do return end
+    -- draw to screen
+    --
+    local cursorY = 2 -- skip two lines at the top
+    for k, item in pairs(renderedArr) do
+        local countBlit = item[2]
+        local nameBlit = item[3]
 
-    local maxNumLength = 0
-    if self.stackMultiple then
-        -- biggest number no longer guarantees longest string, so we need to be more sophisticated
-
-        for k, item in pairs(sortedList) do
-            local len = renderStackCount(
-                item.count,
-                nil,
-                item.maxCount or 64,
-                "8",
-                self.percent
-            ):len()
-            maxNumLength = math.max(maxNumLength, len)
-        end
-    else
-        maxNumLength = string.len(sortedList[1].count)
-    end
-
-    local maxNameLength = self.win.width - (maxNumLength + string.len(" - "))
-
-    -- offset of the entire list down to leave space for top lines
-    local yOffset = 2
-
-    for y=1, math.min(self.win.height, #sortedList) do
-        local item = sortedList[y]
-        self.win:setCursorPos(1, y + yOffset)
-        local countStr, csfg, csbg
-        local percent
-        if item.space then
-            local space = item.space[1]
-            local numItems = item.space[2] - item.space[1]
-            -- between 0 and 1
-            percent = numItems / item.space[2]
-        end
-        if self.stackMultiple then
-            countStr, csfg, csbg = renderStackCount(
-                item.count,
-                percent,
-                item.maxCount or 64,
-                "8",
-                self.percent,
-                maxNumLength
-            )
-        else
-            local fgcol
-            if percent and percent == 1 then fgcol = "e" -- red
-            elseif percent and percent >= 0.9 then fgcol = "1" --orange
-            elseif percent and percent >= 0.75 then fgcol = "4" -- yellow
-            else fgcol = "f" end --black
-            countStr = ccs.ensure_width(tostring(item.count), maxNumLength)
-            if self.percent then
-                countStr = countStr..percentStr(percent)
-            end
-            csfg = fgcol:rep(countStr:len())
-            csbg = ("8"):rep(countStr:len())
-        end
-        local nameStr
-        if item.displayName ~= nil then
-            nameStr = item.displayName
-        else
-            nameStr = tostring(item[1])
-        end
-        local n2 = nameStr:sub(1, math.min(nameStr:len(), maxNameLength - 4))
-
-        if nameStr:len() > maxNameLength - 4 then
-            n2 = n2 .. ".."
-        end
-
-        -- if this item is unregistered or misplaced
-        if item.reg[2] == false then
-            local oldCol = self.win:getTextColour()
-            self.win:blit(countStr, csfg, csbg)
-            self.win:setTextColour(oldCol)
-            self.win:write(" - ")
-            self.win:setTextColour(colours.red)
-            self.win:write(n2)
-            self.win:setTextColour(oldCol)
-        elseif item.space then
-            local oldCol = self.win:getTextColour()
-            self.win:blit(countStr, csfg, csbg)
-            self.win:setTextColour(oldCol)
-            self.win:write(" - " .. n2)
-        end
+        cursorY = cursorY + 1
+        self.win:setCursorPos(1, cursorY)
+        countBlit:padLeft(maxNumLen)
+        countBlit:render(self.win)
+        self.win:write(" - ")
+        nameBlit:pad(maxNameLen)
+        nameBlit:render(self.win)
     end
 
 end
