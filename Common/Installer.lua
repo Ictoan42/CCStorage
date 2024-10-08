@@ -20,7 +20,8 @@ local files = {
     "RemoteStorageSystemClass.lua",
     "ResultClass.lua",
     "StatusWindowClass.lua",
-    "WindowManagerClass.lua"
+    "WindowManagerClass.lua",
+    "BlitUtils.lua"
 }
 
 for k, v in pairs(files) do
