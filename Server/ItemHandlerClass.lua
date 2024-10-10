@@ -131,39 +131,53 @@ function itemSorter:sortAllFromChest(from)
     retInfo["no_space"] = 0
     retInfo["unregistered"] = 0
     retInfo["successful"] = 0
-    retInfo["unknown"] = 0
 
-    local funcsToExec = {}
+    -- HACK: pushItems() seems to return nil sometimes and i don't understand why,
+    -- for now we just repeatedly try to sort the items again if it fails
+    local iters
+    for i=1,10,1 do -- limit just in case an item is REALLY refusing to sort
+        retInfo["unknown"] = 0
+        local funcsToExec = {}
 
-    -- iterate over every slot in the chest, sorting the items in parallel
-    for k, v in pairs(list) do
-        table.insert(
-            funcsToExec,
-            function()
-                local result = self:sortItem(k, from, v)
-                result:handle(
-                    function(outcomeInfo)
-                        retInfo["successful"] = retInfo["successful"] + outcomeInfo[4]
-                        if not outcomeInfo[1] then -- if not all items were sorted
-                            retInfo[1] = false
-                            local reason = outcomeInfo[2]
-                            retInfo[reason] = retInfo[reason] + outcomeInfo[3]
-                            -- if reason == "unregistered" then
-                            --     retInfo["unregistered"] = retInfo["unregistered"] + outcomeInfo[3]
-                            -- elseif reason == "no_space" then
-                            --     retInfo["no_space"] = retInfo["no_space"] + outcomeInfo[3]
-                            -- end
+        -- iterate over every slot in the chest, sorting the items in parallel
+        for k, v in pairs(list) do
+            table.insert(
+                funcsToExec,
+                function()
+                    local result = self:sortItem(k, from, v)
+                    result:handle(
+                        function(outcomeInfo)
+                            retInfo["successful"] = retInfo["successful"] + outcomeInfo[4]
+                            if not outcomeInfo[1] then -- if not all items were sorted
+                                retInfo[1] = false
+                                local reason = outcomeInfo[2]
+                                retInfo[reason] = retInfo[reason] + outcomeInfo[3]
+                                -- if reason == "unregistered" then
+                                --     retInfo["unregistered"] = retInfo["unregistered"] + outcomeInfo[3]
+                                -- elseif reason == "no_space" then
+                                --     retInfo["no_space"] = retInfo["no_space"] + outcomeInfo[3]
+                                -- end
+                            end
+                        end,
+                        function(err)
+                            self.logger:e("Failed to sort item: '"..err.."'")
                         end
-                    end,
-                    function(err)
-                        self.logger:e("Failed to sort item: '"..err.."'")
-                    end
-                )
-            end
-        )
+                    )
+                end
+            )
+        end
+
+        SplitAndExecSafely(funcsToExec)
+
+        if retInfo.unknown == 0 then
+            iters = i
+            break
+        end
     end
 
-    SplitAndExecSafely(funcsToExec)
+    if iters > 1 then
+        self.logger:e("Needed to run "..iters.." iterations of sortAllFromChest to get all items to sort")
+    end
 
     -- return Ok(not unregisteredFound) -- invert to align with system-wide concept of "false" meaning bad and "true" meaning good
     return Ok(retInfo)
