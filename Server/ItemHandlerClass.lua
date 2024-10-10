@@ -27,10 +27,11 @@ local itemSorter = {}
 --- Return format:
 --- ```
 --- {
----   boolean,                                 -- true if there were no issues, false otherwise
----   "unregistered"|"no_item"|"no_space"|nil, -- a reason if it wasn't
----   integer,                                 -- the number of items that couldn't be sorted
----   integer,                                 -- the number of items that were sorted successfuly
+---   boolean,   -- true if there were no issues, false otherwise
+---              -- a reason if it wasn't
+---   "unregistered"|"no_item"|"no_space"|"unknown"|nil,
+---   integer,   -- the number of items that couldn't be sorted
+---   integer,   -- the number of items that were sorted successfuly
 --- }
 --- ```
 function itemSorter:sortItem(slot, from, itemObj)
@@ -72,6 +73,13 @@ function itemSorter:sortItem(slot, from, itemObj)
         local moved = fromPeriph.pushItems(dest, slot)
         if moved == itemObj["count"] then -- if all items in the slot were moved
             return Ok({true, nil, 0, moved})
+        elseif moved == nil then
+            -- sometimes pushItems seems to return nil for some reason (CC bug?) so
+            -- handle that case here. Also print debug info so i can try to track
+            -- down repro steps
+            self.logger:e("Failed to move item "..itemObj.name.." to dest "..dest..", slot "..slot)
+            self.logger:e("pushItems() returned nil")
+            return Ok({false, "unknown", itemObj.count, 0})
         else
             return Ok({false, "no_space", itemObj["count"] - moved, moved}) -- how many were left over
         end
@@ -123,6 +131,7 @@ function itemSorter:sortAllFromChest(from)
     retInfo["no_space"] = 0
     retInfo["unregistered"] = 0
     retInfo["successful"] = 0
+    retInfo["unknown"] = 0
 
     local funcsToExec = {}
 
