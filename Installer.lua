@@ -100,7 +100,5 @@ shell.run("wget run " .. mainURL .. toInstall .. "/Installer.lua")
     end
 end ]]
 
--- installer for the CCStorage main storage system program
-
 print("")
 print("Installation complete")

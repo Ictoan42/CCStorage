@@ -11,7 +11,6 @@ TODO:
 - clean to correct chest is failing with "tried to sort non existant item" error
 - add a "remap" function to move registered items
 - this README
-- proper installers that can create startup files
 - launch shortcuts in root
 - register should return the number of item TYPES registered
 - single-retrieve mode for the TUI
