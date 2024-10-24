@@ -12,7 +12,18 @@ local STR = require("cc.strings")
 --- @field outerWin ccTweaked.Window
 --- @field innerWin ccTweaked.Window
 --- @field buttons table
+--- @field overlay boolean
 local AdvancedWindow = {}
+
+--- @param visible boolean
+--- Sets the visibility status of the window
+function AdvancedWindow:setVisible(visible)
+    self.outerWin.setVisible(visible)
+end
+
+function AdvancedWindow:isVisible()
+    return self.outerWin.isVisible()
+end
 
 --- @param text string
 --- Writes 'text' on the window
@@ -255,16 +266,22 @@ local AdvancedWindowMetatable = {
 --- @param bgcol ccTweaked.colors.color
 --- @param fgcol ccTweaked.colors.color
 --- @param bordercol ccTweaked.colors.color
+--- @param overlay boolean|nil
+--- @param startVisible boolean|nil
 --- @return AdvancedWindow
 --- Create a new Advanced Window
-local function new(parent, x, y, w, h, bgcol, fgcol, bordercol)
+local function new(parent, x, y, w, h, bgcol, fgcol, bordercol, overlay, startVisible)
+
+    overlay = overlay or false
+    if startVisible == nil then startVisible = true end
 
     local outerWin = window.create(
         parent,
         x,
         y,
         w,
-        h
+        h,
+        startVisible
     )
 
     local innerWin = window.create(
@@ -286,7 +303,8 @@ local function new(parent, x, y, w, h, bgcol, fgcol, bordercol)
             borderColour = bordercol,
             outerWin = outerWin,
             innerWin = innerWin,
-            buttons = {}
+            buttons = {},
+            overlay = overlay
         },
         AdvancedWindowMetatable
     )
