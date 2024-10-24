@@ -12,7 +12,7 @@ TODO:
 - add a "remap" function to move registered items
 - this README
 - launch shortcuts in root
-- single-retrieve mode for the TUI
 - some kind of misc. storage
 - some kind of bulk storage (multi chest per item)
 - crafting perhaps?
+- "get one stack" often gets less than a stack

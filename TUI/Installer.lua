@@ -36,7 +36,7 @@ while true do
             else
                 f.write("term.clear()")
                 f.write("term.setCursorPos(1, 1)")
-                f.write("shell.run(\"CCStorage/TUI/STUI.lua\")")
+                f.write("shell.run(\"CCStorage/TUI/Wrapper.lua\")")
                 f.close()
             end
         end

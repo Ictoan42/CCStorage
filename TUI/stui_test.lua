@@ -13,7 +13,7 @@ DBGMONPRINT = function(obj)
     term.redirect(term.native())
 end
 
-local status, val = pcall(function() require("STUI") end)
+local status, val = pcall(function() require("Wrapper") end)
 
 if status == false then
     DBGMONPRINT(val)

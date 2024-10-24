@@ -36,7 +36,14 @@ function SearchBox:draw()
         self.win:setBackgroundColour(colours.red)
         self:setListOverride("Invalid pattern")
     end
-    self.win:write(self.searchTerm) -- print current search term
+    if self.searchTerm:len() ~= 0 then
+        self.win:write(self.searchTerm) -- print current search term
+    else
+        self.win:setTextColour(self.highlightCol)
+        self.win:setBackgroundColour(self.bgCol)
+        self.win:write("start typing...")
+        self.win:setTextColour(self.fgCol)
+    end
     self.win:setCursorPos(1, 2)
     self.win:setBackgroundColour(self.bgCol)
     self.win:write( -- seperator
