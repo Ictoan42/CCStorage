@@ -149,7 +149,8 @@ function StorageSystem:detectAndRegisterItems()
     end
 
     -- iterate over all unregistered items, registering them
-    local itemsRegistered = 0
+    local itemsRegistered = {}
+    local itemsRegisteredCount = 0
     for k, v in ipairs(unregisteredItems) do -- ipairs() to implicitly ignore the "count" entry
         -- addDest just ignores us if we register the same item twice so blind iteration is fine
         -- alright "fine" might be a stretch but it won't crash at least
@@ -158,7 +159,12 @@ function StorageSystem:detectAndRegisterItems()
             v[1] -- chest name
         )
         if res2:is_err() then return res2
-        else itemsRegistered = itemsRegistered + 1 end
+        else
+            if itemsRegistered[v[4]] == nil then
+                itemsRegisteredCount = itemsRegisteredCount + 1
+                itemsRegistered[v[4]] = true
+            end
+        end
     end
 
     local cRes = self.nameCache:cacheAll()
@@ -166,7 +172,7 @@ function StorageSystem:detectAndRegisterItems()
         self.logger:e("Failed to cache names after registering: "..cRes:unwrap_err(self.logger))
     end
 
-    return Ok(itemsRegistered)
+    return Ok(itemsRegisteredCount)
 end
 
 --- @param itemID string

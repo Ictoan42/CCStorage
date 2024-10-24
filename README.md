@@ -12,7 +12,6 @@ TODO:
 - add a "remap" function to move registered items
 - this README
 - launch shortcuts in root
-- register should return the number of item TYPES registered
 - single-retrieve mode for the TUI
 - some kind of misc. storage
 - some kind of bulk storage (multi chest per item)

@@ -115,7 +115,7 @@ function MainButtonPanel:handleForgetResponse(response)
 
     res:handle(
         function(val)
-            self.sw:setMessage({"Unregistered "..#val.." item(s)"})
+            self.sw:setMessage({"Forgot "..#val.." item type(s)"})
             if #val > 0 then
                 self.sw:flash(colours.lime, colours.black)
             else
@@ -197,7 +197,7 @@ function MainButtonPanel:registerHandler(evIn)
     local good
     evIn[1]:handle(
         function(registered)
-            self.sw:setMessage({"Registered "..registered.." item(s)"})
+            self.sw:setMessage({"Registered "..registered.." item type(s)"})
             if registered > 0 then
                 self.sw:flash(colours.lime, colours.black)
             else
