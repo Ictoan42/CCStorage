@@ -2,3 +2,4 @@ Common/ResultTest.lua
 log.txt
 .vscode
 .luarc.json
+TUI.conf
