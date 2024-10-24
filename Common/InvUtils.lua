@@ -15,9 +15,10 @@ local function freeSlots(invPeriph)
 
     local emptySlots = invPeriph.size()
 
-    -- TODO handle peripheral calls returning nil
+    -- handle peripheral calls returning nil
+    local list = invPeriph.list() or {}
 
-    for slot, item in pairs(invPeriph.list()) do
+    for slot, item in pairs(list) do
         emptySlots = emptySlots - 1
     end
 
