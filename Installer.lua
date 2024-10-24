@@ -70,7 +70,11 @@ fs.makeDir("/CCStorage")
 
 local mainURL = "https://raw.githubusercontent.com/Ictoan42/CCStorage/main/"
 
-shell.run("wget run " .. mainURL .. toInstall .. "/Installer.lua")
+if overwrite then
+    shell.run("wget run " .. mainURL .. toInstall .. "/Installer.lua -o")
+else
+    shell.run("wget run " .. mainURL .. toInstall .. "/Installer.lua")
+end
 
 --[[ while true do
     print("Would you like the component to run on startup? [Y/n]")

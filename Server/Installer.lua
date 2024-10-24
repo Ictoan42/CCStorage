@@ -1,3 +1,10 @@
+local args = {...}
+
+local overwrite = false
+for k, v in pairs(args) do
+    if v == "-o" then overwrite = true end
+end
+
 if not fs.exists("/CCStorage") then
     error("Directory /CCStorage does not exist")
 end
@@ -19,11 +26,19 @@ local files = {
 }
 
 for k, v in pairs(files) do
+    if overwrite then
+        fs.delete("/CCStorage/Server/"..v)
+    end
     shell.run("wget " .. mainURL .. "Server/" .. v .. " /CCStorage/Server/" .. v)
 end
 
-if not fs.exists("/CCStorage/Common") or not fs.exists("/CCLogger.lua") then
+if
+    not fs.exists("/CCStorage/Common")
+    or not fs.exists("/CCLogger.lua")
+then
     shell.run("wget run " .. mainURL .. "Common/Installer.lua")
+elseif overwrite then
+    shell.run("wget run " .. mainURL .. "Common/Installer.lua -o")
 end
 
 while true do

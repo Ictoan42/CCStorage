@@ -1,3 +1,10 @@
+local args = {...}
+
+local overwrite = false
+for k, v in pairs(args) do
+    if v == "-o" then overwrite = true end
+end
+
 if not fs.exists("/CCStorage") then
     error("Directory /CCStorage does not exist")
 end
@@ -9,15 +16,25 @@ local mainURL = "https://raw.githubusercontent.com/Ictoan42/CCStorage/main/"
 
 local files = {
     "STUI.lua",
-    "SearchBoxClass.lua"
+    "SearchBoxClass.lua",
+    "ConfigTemplate.conf",
+    "Wrapper.lua"
 }
 
 for k, v in pairs(files) do
+    if overwrite then
+        fs.delete("/CCStorage/TUI/"..v)
+    end
     shell.run("wget " .. mainURL .. "TUI/" .. v .. " /CCStorage/TUI/" .. v)
 end
 
-if not fs.exists("/CCStorage/Common") or not fs.exists("/CCLogger.lua") then
+if
+    not fs.exists("/CCStorage/Common")
+    or not fs.exists("/CCLogger.lua")
+then
     shell.run("wget run " .. mainURL .. "Common/Installer.lua")
+elseif overwrite then
+    shell.run("wget run " .. mainURL .. "Common/Installer.lua -o")
 end
 
 while true do
